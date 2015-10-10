@@ -13,5 +13,13 @@ fi
 echo "Pulling latest server image..."
 docker pull bcokert/elophant-server:$LATESTBUILD
 
+echo "Cleaning up any existing container..."
+if docker ps -a | grep -q elophant_server_dev_1; then
+  docker stop elophant_server_dev_1
+  docker rm elophant_server_dev_1
+else
+  echo "No existing service to stop"
+fi
+
 echo "Starting a new server container..."
-docker run -d -p 9000:9000 bcokert/elophant-server:$LATESTBUILD /usr/local/lib/elophant-server/bin/elophant
+docker run -d -p 9000:9000 --name elophant_server_dev_1 bcokert/elophant-server:$LATESTBUILD /usr/local/lib/elophant-server/bin/elophant
