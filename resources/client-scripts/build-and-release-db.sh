@@ -2,11 +2,11 @@
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../..
 RESOURCE_DIR=${ROOT_DIR}/resources
 BUILD_DIR=${RESOURCE_DIR}/build
-ARTIFACT_DIR=${ROOT_DIR}/target/universal/stage
-DOCKER_FILE_NAME=Dockerfile-server
-OUTPUT_DIR=${ROOT_DIR}/release-server-tmp
+SCRIPT_DIR=${RESOURCE_DIR}/db-init-scripts
+DOCKER_FILE_NAME=Dockerfile-db
+OUTPUT_DIR=${ROOT_DIR}/release-db-tmp
 REPOSITORY=bcokert
-IMAGE=elophant-server
+IMAGE=elophant-db
 
 ERROR_TXT="\033[1m\033[41m\033[97mERROR:\033[0m"
 
@@ -14,11 +14,8 @@ echo "Cleaning any old local release files..."
 rm -rf ${OUTPUT_DIR}
 mkdir ${OUTPUT_DIR}
 
-echo "Building project..."
-${ROOT_DIR}/activator clean compile stage
-
 echo "Preparing build artifacts for docker imaging..."
-cp -r ${ARTIFACT_DIR} ${OUTPUT_DIR}
+cp -r ${SCRIPT_DIR} ${OUTPUT_DIR}
 cp ${BUILD_DIR}/${DOCKER_FILE_NAME} ${OUTPUT_DIR}
 mv ${OUTPUT_DIR}/${DOCKER_FILE_NAME} ${OUTPUT_DIR}/Dockerfile
 
