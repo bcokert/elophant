@@ -6,3 +6,5 @@ WORKDIR /usr/local/lib
 EXPOSE 9000
 
 COPY stage elophant-server/
+
+CMD ["/usr/local/lib/elophant-server/bin/elophant"]

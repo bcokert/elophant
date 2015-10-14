@@ -3,9 +3,9 @@ REPOSITORY=bcokert              # The dockerhub repository to pull from
 IMAGE=elophant-server           # The image for the container
 VERSION=latest                  # The version tag for the container
 SERVER_NAME=elophant_server_1   # The name of the container that runs the service
+DATABASE_NAME=elophant_db_1     # The name of the database container. Used for linking
 SERVER_PORT_INTERNAL=9000       # The port that the server is listening to for requests
 SERVER_PORT_EXTERNAL=9000       # The port that the docker host will expose (Not the same as the gateway port)
-SERVER_START_SCRIPT=/usr/local/lib/elophant-server/bin/elophant # The script that will start the server
 
 ERROR_TXT="\033[1m\033[41m\033[97mERROR:\033[0m"
 
@@ -28,4 +28,4 @@ else
 fi
 
 echo "Starting a new server container..."
-docker run -d -p ${SERVER_PORT_INTERNAL}:${SERVER_PORT_EXTERNAL} --name ${SERVER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION} ${SERVER_START_SCRIPT}
+docker run -d --link ${DATABASE_NAME}:database -p ${SERVER_PORT_INTERNAL}:${SERVER_PORT_EXTERNAL} --name ${SERVER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION}

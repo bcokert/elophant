@@ -1,5 +1,6 @@
 FROM postgres:9.4
 MAINTAINER Brandon Okert
 
-# These are run AFTER the postgres db is setup. Use them for users and setup, NOT data
+# These are run AFTER the postgres db is setup
 COPY db-init-scripts /docker-entrypoint-initdb.d/
+RUN chmod 755 /docker-entrypoint-initdb.d/*.sh
