@@ -28,4 +28,6 @@ else
 fi
 
 echo "Starting a new server container..."
-docker run -d --link ${DATABASE_NAME}:database -p ${SERVER_PORT_INTERNAL}:${SERVER_PORT_EXTERNAL} --name ${SERVER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION}
+read -p "Please enter the password of the database user (username 'elophantuser'): " -s USER_PASS
+echo
+docker run -d --link ${DATABASE_NAME}:database -p ${SERVER_PORT_INTERNAL}:${SERVER_PORT_EXTERNAL} -e ELOPHANT_USER_PASSWORD=${USER_PASS} --name ${SERVER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION}
