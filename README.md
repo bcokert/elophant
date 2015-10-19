@@ -1,5 +1,12 @@
 # Elophant
+Elophant is a service that tracks and calculates elo rankings across variables games, events, and users.
 
+Elo is a ranking system for competitive situations between 2 entities, usually players.
+All you need is a system that distributes 1 point amongst the two players. For example, the winner could get 1 point, and the loser the remaining 0.
+A draw might give both players 0.5 points. Or perhaps player 1 took 7 of the 10 available victory points, and so gets 0.7 of the win, leaving 0.3 for the other player.
+So long as the total is 1, elo can calculate each players skill level over time.
+
+All you have to do is tell it who was playing, and who got what points, and it does the rest.
 
 ## Architecture
 There are 3 main environments that Elophant is setup for. Throughout the documentation they are:
@@ -20,10 +27,12 @@ This section deals with setting up each environment, as well as deploying to eac
 
 ### Setting up a local environment
 Locally you can run an elophant server, and by default it will connect to the dev database.
+
 #### Setup Environment Variables
 * Run resources/client-scripts/setup.sh
 * If using a gateway between the internet and your dev docker host, ensure it is forwarding port 19213 external to 5432 of the docker host
 * If not, manually change environment variable ELOPHANT_DB_PORT to 5432, and ELOPHANT_GATEWAY to the address of your docker host
+
 #### Install local docker host
 To build and deploy, you need to run docker locally. Linux environments can be hosts themselves, and non-linux environments use a VM managed by a tool called docker-machine
 * OSX - http://docs.docker.com/mac/step_one/
@@ -34,25 +43,31 @@ To build and deploy, you need to run docker locally. Linux environments can be h
 
 ### Setting up a dev environment
 A dev environment (or any environment) for elophant is simply a docker host. You can likely configure the host however you want, but the following requirements must be met:
+
 #### Basics
 * You need at least 1 account that has root access or sufficient sudo access
 * You'll likely need to setup an ssh server, user accounts, and a docker group
 * Install docker 1.9.x via 'curl -sSL https://get.docker.com/ | sh'
+
 #### Configure ports
 * Ensure port 9000 of the docker host is forwarded externally (this is the default port for the server)
 * Ensure port 5432 of the docker host is forwarded externally (this is used by the local server when it connects to the dev database)
 * All other ports are automatically configured between docker containers within the host
+
 #### Install deployment scripts
 * Copy all of the scripts in resources/server-scripts to the docker host, somewhere like /usr/local/bin. Ensure the docker group can run them
+
 #### Setup Environment variables
 * Set ELOPHANT_USER_PASSWORD, which should be the same password as the user used for the database (see the database setup section below)
 * Set ELOPHANT_ENV=dev, which allows the server to choose configuration based on the environment (local, dev, production)
 * Set ELOPHANT_SECRET, which is the scala play secret. You can create one per environment via './activator playGenerateSecret'
+
 #### Setup database for the first time
 * Normally you'll just deploy the service or db service, but the first time you setup you also need some additional setup
 * Locally, run resources/client-scripts/build-and-release-db.sh (or use an existing db image)
 * On the docker host, run /usr/local/bin/deploy-database.sh
 * On the docker host, run /usr/local/bin/first-setup-database.sh, and follow the instructions in the container it brings up
+
 #### Setup server
 * Once the database is setup, the server is trivial to run
 * Locally, run resources/client-scripts/build-and-release-server.sh (or use an existing server image)
@@ -62,6 +77,7 @@ A dev environment (or any environment) for elophant is simply a docker host. You
 ### Setting up a production environment
 Setting up a production environment is exactly the same as setting up the dev environment, just with different values.
 Ideally you'll also change the passwords, secrets, and user accounts used. The only essential different step is:
+
 #### Setup Environment variables
 * Set ELOPHANT_ENV=production
 
@@ -79,9 +95,11 @@ By default the dev server will serve to localhost:9000
 
 ### Re-start/Re-deploy a server
 Typically each server has an associated client-script to build and release, and another server-script to deploy
+
 #### Web Server
 * Locally, run resources/client-scripts/build-and-release-server.sh (or use an existing server image)
 * On the docker host, run /usr/local/bin/deploy-server.sh
+
 #### Database Server
 * Locally, run resources/client-scripts/build-and-release-db.sh (or use an existing db image)
 * On the docker host, run /usr/local/bin/deploy-database.sh
