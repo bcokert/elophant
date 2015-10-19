@@ -36,10 +36,10 @@ Locally you can run an elophant server, and by default it will connect to the de
 #### Install local docker host
 To build and deploy, you need to run docker locally. Linux environments can be hosts themselves, and non-linux environments use a VM managed by a tool called docker-machine
 * OSX - http://docs.docker.com/mac/step_one/
-** After installation, run resources/client-scripts/build-and-release-server.sh, which will guide you through setting up docker-machine
-** To use docker, either use the docker-quickstart-terminal, or run '$(docker-machine env default)' in your terminal, then use 'docker' as per usual
+  * After installation, run resources/client-scripts/build-and-release-server.sh, which will guide you through setting up docker-machine
+  * To use docker, either use the docker-quickstart-terminal, or run '$(docker-machine env default)' in your terminal, then use 'docker' as per usual
 * linux - curl -sSL https://get.docker.com/ | sh
-** Follow the steps it prints out to create a docker group and add your dev user to it
+  * Follow the steps it prints out to create a docker group and add your dev user to it
 
 ### Setting up a dev environment
 A dev environment (or any environment) for elophant is simply a docker host. You can likely configure the host however you want, but the following requirements must be met:
