@@ -1,5 +1,5 @@
 # Elophant
-Elophant is a service that tracks and calculates elo rankings across variables games, events, and users.
+Elophant is a service that tracks and calculates elo rankings across various games, events, and users.
 
 Elo is a ranking system for competitive situations between 2 entities, usually players.
 All you need is a system that distributes 1 point amongst the two players. For example, the winner could get 1 point, and the loser the remaining 0.
