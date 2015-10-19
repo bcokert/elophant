@@ -2,10 +2,10 @@
 
 
 ## Architecture
-There are 3 main environments that Elophant is setup for. Throught the documentation they are:
-Local: The local environment where you typically develop elophant
-Dev: The dev environment that simulates production, and homes the database that the local environment uses
-Production: The production environment
+There are 3 main environments that Elophant is setup for. Throughout the documentation they are:
+* Local: The local environment where you typically develop elophant
+* Dev: The dev environment that simulates production, and homes the database that the local environment uses
+* Production: The production environment
 
 All environments make use of a docker host, which runs the containers that represent every other piece of the architecture (except possible gateways).
 The environment machine runs docker (making it a docker host) or runs a VM that runs docker (making the VM the docker host).
