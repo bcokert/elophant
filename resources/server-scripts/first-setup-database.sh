@@ -27,16 +27,20 @@ else
   exit 1
 fi
 
+echo
 echo "Running a temporary container to setup the database..."
-echo "Within this container is where you'll setup. These basic commands should be enough, but you can customize db's and"
-echo "users as well:"
+echo "Within this container is where you'll setup. When done, just logout and it'll cleanup itself. The minimal steps are below:"
+echo "-------------------------------------------------------------------------------------------------"
+echo
+echo "chown -R postgres:postgres /var/lib/postgresql"
 echo
 echo "su postgres"
-echo "PATH=/usr/lib/postgresql/9.4/bin:\$PATH"
 echo "echo \"listen_addresses='*'\" >> /var/lib/postgresql/data/postgresql.conf"
-echo "/usr/lib/postgresql/9.4/bin/postgres & # run the server in this temporary container so that we can add users and data"
+echo "/usr/lib/postg  resql/9.4/bin/postgres &"
+echo
 echo "psql"
 echo "CREATE USER elophantuser WITH PASSWORD 'xxx'"
 echo "CREATE DATABASE elophant OWNER elophantuser"
-echo "pg_ctl stop # Exit postgres. The data was saved to a volume, so the real service will have access to it"
+echo
+echo "-------------------------------------------------------------------------------------------------"
 docker run -ti --rm --volumes-from ${VOLUME_CONTAINER_NAME} --name ${CONTAINER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION} /bin/bash
