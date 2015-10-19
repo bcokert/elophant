@@ -14,7 +14,7 @@ if ! docker info | grep -q Username; then
   echo "You must login to push to docker Hub (you only need to do this once):"
   docker login
 else
-  echo "Succesfully logged in!"
+  echo "Successfully logged in!"
 fi
 
 echo "Pulling latest server image..."
@@ -28,6 +28,4 @@ else
 fi
 
 echo "Starting a new server container..."
-read -p "Please enter the password of the database user (username 'elophantuser'): " -s USER_PASS
-echo
-docker run -d --link ${DATABASE_NAME}:database -p ${SERVER_PORT_INTERNAL}:${SERVER_PORT_EXTERNAL} -e ELOPHANT_USER_PASSWORD=${USER_PASS} --name ${SERVER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION}
+docker run -d --link ${DATABASE_NAME}:database -p ${SERVER_PORT_INTERNAL}:${SERVER_PORT_EXTERNAL} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} --name ${SERVER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION}

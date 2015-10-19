@@ -5,6 +5,6 @@ WORKDIR /usr/local/lib
 
 EXPOSE 9000
 
-COPY stage elophant-server/
+COPY elophant-server elophant-server/
 
-CMD ["/usr/local/lib/elophant-server/bin/elophant"]
+CMD ["/usr/local/lib/elophant-server/bin/elophant", "-Dconfig.file=/usr/local/lib/elophant-server/conf/application-dev.conf"]
