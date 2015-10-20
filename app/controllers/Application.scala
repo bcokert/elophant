@@ -1,10 +1,11 @@
 package controllers
 
 import play.api._
+import play.api.db.slick.DatabaseConfigProvider
 import play.api.mvc._
 import play.api.Logger
 import slick.dbio.DBIO
-import slick.jdbc.JdbcBackend.Database
+import slick.driver.JdbcProfile
 import slick.lifted.Tag
 import slick.driver.PostgresDriver.api._
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -17,34 +18,36 @@ class Application extends Controller {
   }
 
   def testdb(): Unit = {
-    val db = sys.env.getOrElse("ELOPHANT_ENV", "local") match {
-      case "local" => Database.forConfig("db.local")
-      case "dev" => Database.forConfig("db.dev")
-    }
+    val dbConfig = DatabaseConfigProvider.get[JdbcProfile]("default")(Play.current)
+    val db = dbConfig.db
 
-    case class TestUser(id: Int, name: String)
-
-    class TestUsers(tag: Tag) extends Table[(Int, String)](tag, "TESTUSERS") {
-      def id = column[Int]("ID", O.PrimaryKey)
-      def name = column[String]("NAME")
-      def * = (id, name)
+    class TestUsers(tag: Tag) extends Table[(Int, String, String)](tag, "test_user") {
+      def id = column[Int]("id", O.PrimaryKey)
+      def email = column[String]("email")
+      def name = column[String]("name")
+      def * = (id, email, name)
     }
 
     val testUsers = TableQuery[TestUsers]
 
-//    val setup = DBIO.seq(
-//      testUsers.schema.create,
-//
-//      testUsers += (123, "Bob"),
-//      testUsers += (456, "Jim"),
-//      testUsers += (789, "Kerry")
-//    )
-//
-//    val setupFixture = db.run(setup)
+    val setup = DBIO.seq(
+      testUsers.schema.create,
+      testUsers +=(123, "bob@hotmail.com", "Bob")
+    )
 
-    println("Users:")
-    db.run(testUsers.result) map (_.foreach {
-      case (id, name) => println("  " + name + "(" + id + ")")
-    })
+    //    val setupFixture = db.run(setup)
+
+    val result = db.run(testUsers.result)
+    result.onSuccess {
+      case s =>
+        println("Users:")
+        s.foreach {
+          case (id, email, name) => println(id + ": " + name + ", " + email)
+        }
+    }
+
+    result.onFailure {
+      case e => println(e)
+    }
   }
 }

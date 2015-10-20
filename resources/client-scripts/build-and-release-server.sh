@@ -21,7 +21,7 @@ elif ! docker-machine ls | grep -q default.*Running; then
   exit 1
 fi
 
-echo "Cleaning any old local release files..."
+echo "Cleaning any old default release files..."
 rm -rf ${OUTPUT_DIR}
 mkdir ${OUTPUT_DIR}
 

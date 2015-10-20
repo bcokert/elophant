@@ -1,6 +1,6 @@
 name := """elophant"""
 
-version := "0.0.1"
+version := "0.0.2"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -10,6 +10,7 @@ libraryDependencies ++= Seq(
   cache,
   ws,
   specs2 % Test,
+  evolutions,
   "org.postgresql" % "postgresql" % "9.4-1204-jdbc4",
   "com.typesafe.play" %% "play-slick" % "1.1.0",
   "com.typesafe.play" %% "play-slick-evolutions" % "1.1.0",

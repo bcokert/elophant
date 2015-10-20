@@ -10,7 +10,7 @@ IMAGE=elophant-db
 
 ERROR_TXT="\033[1m\033[41m\033[97mERROR:\033[0m"
 
-echo "Cleaning any old local release files..."
+echo "Cleaning any old default release files..."
 rm -rf ${OUTPUT_DIR}
 mkdir ${OUTPUT_DIR}
 
