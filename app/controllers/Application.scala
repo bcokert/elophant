@@ -49,5 +49,7 @@ class Application extends Controller {
     result.onFailure {
       case e => println(e)
     }
+
+    db.close()
   }
 }
