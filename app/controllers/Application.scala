@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class Application extends Controller {
 
   def index = Action {
-    testdb()
+//    testdb()
     Ok(views.html.index("Your new application is ready."))
   }
 

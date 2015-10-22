@@ -5,6 +5,9 @@
 # Home page
 GET     /                           controllers.Application.index
 
+# Static endpoints for testing
+GET     /expectedEloChange          controllers.Static.expectedEloChange(ratingA: Option[Int], ratingB: Option[Int], score: Option[Double])
+
 # Static Assets
 GET     /static/*file               controllers.Assets.at(path="/public", file)
 
