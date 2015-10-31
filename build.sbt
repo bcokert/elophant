@@ -1,6 +1,6 @@
 name := """elophant"""
 
-version := "0.0.2"
+version := "0.0.3"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -15,7 +15,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick" % "1.1.0",
   "com.typesafe.play" %% "play-slick-evolutions" % "1.1.0",
   "com.typesafe.slick" %% "slick" % "3.1.0",
-  "org.slf4j" % "slf4j-nop" % "1.6.4"
+  "org.slf4j" % "slf4j-nop" % "1.6.4",
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+  "org.mockito" % "mockito-all" % "1.10.19" % "test"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"

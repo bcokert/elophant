@@ -1,7 +1,41 @@
-@(message: String)
+<!DOCTYPE html>
 
-@main("Welcome to Play") {
+<html lang="en">
+    <head>
+        <title>Elophant Dev Interface</title>
+        <link rel="stylesheet" media="screen" href="@routes.Assets.at("css/main.css")">
+        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("img/favicon.png")">
+        <script src="@routes.Assets.at("js/main.js")" type="text/javascript"></script>
+    </head>
+    <body>
+        <h2>Commands</h2>
 
-    @play20.welcome(message)
+        <h3>/</h3>
+        <p>Displays this help page</p>
 
-}
+        <h3>/players/</h3>
+        <p>Retrieve All Players</p>
+        <p><pre><code>
+        [{
+            id: 422,
+            first_name: "Bob",
+            last_name: "Dylan",
+            email: "bob.dylan@@website.com"
+        }, {
+            ...
+        }]
+        </code></pre></p>
+
+        <h3>/players/{id: Int}</h3>
+        <p>Retrieve the player with the given id</p>
+        <p><pre><code>
+        {
+            id: 422,
+            first_name: "Bob",
+            last_name: "Dylan",
+            email: "bob.dylan@@website.com"
+        }
+        </code></pre></p>
+
+    </body>
+</html>
