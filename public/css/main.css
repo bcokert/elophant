@@ -3,7 +3,7 @@ body {
     font-size: 14px;
 }
 
-h2, h3 {
+h1, h2 {
     background-color: #aaa;
     padding-left: 8px;
 }
@@ -14,4 +14,8 @@ pre {
     font-family: monospace;
     background-color: #3f3f3f;
     color: #dcdcdc;
+}
+
+pre.input {
+    background-color: #3f5f3f;
 }
