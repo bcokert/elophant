@@ -1,6 +1,6 @@
 package controllers
 
-import models.Player
+import models.{GenericIsSuccess, Player}
 import play.api.mvc._
 import play.api.Logger
 import play.api.libs.json._
@@ -36,4 +36,11 @@ class PlayerController extends Controller {
         )).as("application/json)")
     }
   }
+
+  def deletePlayer(id: Int) = Action {
+    Ok(Json.toJson(Await.result(Players.deletePlayer(id), 5.seconds) match {
+      case 1 => GenericIsSuccess(true)
+      case 0 => GenericIsSuccess(false)
+    })).as("application/json")
+}
 }

@@ -20,6 +20,12 @@ libraryDependencies ++= Seq(
   "org.mockito" % "mockito-all" % "1.10.19" % "test"
 )
 
+//coverageMinimum := 80
+
+//coverageFailOnMinimum := true
+
+coverageExcludedPackages := "<empty>;(JavaScriptReverseRoutes)\\.scala"
+
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
 // Play provides two styles of routers, one expects its actions to be injected, the

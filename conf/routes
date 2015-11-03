@@ -6,9 +6,10 @@
 GET     /                           controllers.Application.index
 
 # Players
-GET     /player                     controllers.PlayerController.getPlayers
+GET     /player/                    controllers.PlayerController.getPlayers
 GET     /player/:id                 controllers.PlayerController.getPlayer(id: Int)
-POST    /player/add                 controllers.PlayerController.addPlayer()
+POST    /player/                    controllers.PlayerController.addPlayer()
+DELETE  /player/:id                 controllers.PlayerController.deletePlayer(id: Int)
 
 # Static endpoints for testing
 GET     /expectedEloChange          controllers.Static.expectedEloChange(ratingA: Option[Int], ratingB: Option[Int], score: Option[Double])
