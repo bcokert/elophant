@@ -36,7 +36,7 @@ echo "chown -R postgres:postgres /var/lib/postgresql"
 echo
 echo "su postgres"
 echo "echo \"listen_addresses='*'\" >> /var/lib/postgresql/data/postgresql.conf"
-echo "/usr/lib/postg  resql/9.4/bin/postgres &"
+echo "/usr/lib/postgresql/9.4/bin/postgres &"
 echo
 echo "psql"
 echo "CREATE USER elophantuser WITH PASSWORD 'xxx'"
