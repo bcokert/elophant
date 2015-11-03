@@ -11,6 +11,18 @@ GET     /player/:id                 controllers.PlayerController.getPlayer(id: I
 POST    /player/                    controllers.PlayerController.addPlayer()
 DELETE  /player/:id                 controllers.PlayerController.deletePlayer(id: Int)
 
+# Leagues
+GET     /league/                    controllers.LeagueController.getLeagues
+GET     /league/:id                 controllers.LeagueController.getLeague(id: Int)
+POST    /league/                    controllers.LeagueController.addLeague()
+DELETE  /league/:id                 controllers.LeagueController.deleteLeague(id: Int)
+
+# GameTypes
+GET     /gameType/                    controllers.GameTypeController.getGameTypes
+GET     /gameType/:id                 controllers.GameTypeController.getGameType(id: Int)
+POST    /gameType/                    controllers.GameTypeController.addGameType()
+DELETE  /gameType/:id                 controllers.GameTypeController.deleteGameType(id: Int)
+
 # Static endpoints for testing
 GET     /expectedEloChange          controllers.Static.expectedEloChange(ratingA: Option[Int], ratingB: Option[Int], score: Option[Double])
 

@@ -8,26 +8,39 @@
         <script src="@routes.Assets.at("js/main.js")" type="text/javascript"></script>
     </head>
     <body>
-        <h1>Commands</h1>
+        <h1>Contents</h1>
+        <ul>
+            <li><a href="#basicendpoints">Basic Endpoints</a></li>
+            <li><a href="#testendpoints">Test Endpoints</a></li>
+            <li><a href="#playerendpoints">Player Endpoints</a></li>
+            <li><a href="#leagueendpoints">League Endpoints</a></li>
+            <li><a href="#gametypeendpoints">GameType Endpoints</a></li>
+        </ul>
 
-        <h2>Basic Endpoints</h2>
+
+
+        <h2 id="basicendpoints">Basic Endpoints</h2>
 
         <h3>GET /</h3>
         <p>Displays this help page</p>
 
-        <h2>Test Endpoints</h2>
+
+
+        <h2 id="testendpoints">Test Endpoints</h2>
 
         <h3>GET /expectedEloChange?ratingA=1200&ratingB=1500&score=0</h3>
         <p>A test endpoint to test changes in elo scores</p>
-        <p><pre><code>
-        New Rating A: 1192   New Rating B: 1508
-        </code></pre></p>
+        <pre><code>
+            New Rating A: 1192   New Rating B: 1508
+        </code></pre>
 
-        <h2>Player Endpoints</h2>
+
+
+        <h2 id="playerendpoints">Player Endpoints</h2>
 
         <h3>GET /player/</h3>
         <p>Retrieve All Players</p>
-        <p><pre><code>
+        <pre><code>
         [{
             id: 422,
             firstName: "Bob",
@@ -36,32 +49,133 @@
         }, {
             ...
         }]
-        </code></pre></p>
+        </code></pre>
 
         <h3>GET /player/{id: Int}</h3>
         <p>Retrieve the player with the given id</p>
-        <p><pre><code>
+        <pre><code>
         {
             id: 422,
             firstName: "Bob",
             lastName: "Dylan",
             email: "bob.dylan@@website.com"
         }
-        </code></pre></p>
+        </code></pre>
 
         <h3>POST /player/  [json]</h3>
         <p>Create the player with the given data</p>
-        <p><pre class="input"><code>
+        <pre class="input"><code>
         {
             firstName: "bob",
             lastName: "dylan",
             email: "test@@test.com"
         }
-        </code></pre></p>
-        <p><pre><code>
+        </code></pre>
+        <pre><code>
         {
             success: true
         }
-        </code></pre></p>
+        </code></pre>
+
+        <h3>DELETE /player/{id: Int}</h3>
+        <p>Delete the player with the given id</p>
+        <pre><code>
+        {
+            success: true
+        }
+        </code></pre>
+
+
+
+        <h2 id="leagueendpoints">League Endpoints</h2>
+
+        <h3>GET /league/</h3>
+        <p>Retrieve All Leagues</p>
+        <pre><code>
+        [{
+            id: 2,
+            name: "Foosball"
+        }, {
+            ...
+        }]
+        </code></pre>
+
+        <h3>GET /league/{id: Int}</h3>
+        <p>Retrieve the league with the given id</p>
+        <pre><code>
+        {
+            id: 2,
+            name: "Foosball"
+        }
+        </code></pre>
+
+        <h3>POST /league/  [json]</h3>
+        <p>Create the league with the given data</p>
+        <pre class="input"><code>
+        {
+            name: "bob"
+        }
+        </code></pre>
+        <pre><code>
+        {
+            success: true
+        }
+        </code></pre>
+
+        <h3>DELETE /league/{id: Int}</h3>
+        <p>Delete the league with the given id</p>
+        <pre><code>
+        {
+            success: true
+        }
+        </code></pre>
+
+
+
+        <h2 id="gametypeendpoints">GameType Endpoints</h2>
+
+        <h3>GET /gameType/</h3>
+        <p>Retrieve All GameTypes</p>
+        <pre><code>
+        [{
+            id: 3,
+            name: "Foosball",
+            description: "The one with the balls"
+        }, {
+            ...
+        }]
+        </code></pre>
+
+        <h3>GET /gameType/{id: Int}</h3>
+        <p>Retrieve the gameType with the given id</p>
+        <pre><code>
+        {
+            id: 4,
+            name: "Foosball",
+            description: "The one with the balls"
+        }
+        </code></pre>
+
+        <h3>POST /gameType/  [json]</h3>
+        <p>Create the gameType with the given data</p>
+        <p><pre class="input"><code>
+        {
+            name: "Funball",
+            description: "The new one with the Fun balls!"
+        }
+        </code></pre>
+        <pre><code>
+        {
+            success: true
+        }
+        </code></pre>
+
+        <h3>DELETE /gameType/{id: Int}</h3>
+        <p>Delete the gameType with the given id</p>
+        <pre><code>
+        {
+            success: true
+        }
+        </code></pre>
     </body>
 </html>

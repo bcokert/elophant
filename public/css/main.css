@@ -3,9 +3,14 @@ body {
     font-size: 14px;
 }
 
-h1, h2 {
-    background-color: #aaa;
-    padding-left: 8px;
+h1, h2, h3 {
+    padding-left: 12px;
+}
+
+h2 {
+    padding-top: 8px;
+    border-width: 1px 0 0 0;
+    border-style: solid;
 }
 
 pre {
@@ -18,4 +23,8 @@ pre {
 
 pre.input {
     background-color: #3f5f3f;
+}
+
+a {
+    font-size: 18px;
 }
