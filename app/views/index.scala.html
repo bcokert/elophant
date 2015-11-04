@@ -15,6 +15,7 @@
             <li><a href="#playerendpoints">Player Endpoints</a></li>
             <li><a href="#leagueendpoints">League Endpoints</a></li>
             <li><a href="#gametypeendpoints">GameType Endpoints</a></li>
+            <li><a href="#ratingendpoints">Rating Endpoints</a></li>
         </ul>
 
 
@@ -172,6 +173,41 @@
 
         <h3>DELETE /gameType/{id: Int}</h3>
         <p>Delete the gameType with the given id</p>
+        <pre><code>
+        {
+            success: true
+        }
+        </code></pre>
+
+
+
+        <h2 id="ratingendpoints">Rating Endpoints</h2>
+
+        <h3>GET /eloRating/?playerId=2&leagueId=4&gameTypeId=5</h3>
+        <p>Retrieve All GameTypes</p>
+        <p>Each query param is optional. No params will return all ratings, and each available param will reduce the set by that player/leage/gameType. Combinations are allowed</p>
+        <pre><code>
+        [{
+            eloRating: 1155,
+            playerId: 66,
+            leagueId: 1,
+            gameTypeId: 6,
+        }, {
+            ...
+        }]
+        </code></pre>
+
+        <h3>POST /gameResult/  [json]</h3>
+        <p>Post the result of a game, which will update EloRatings</p>
+        <p><pre class="input"><code>
+        {
+            player1Id: 52,
+            player2Id: 21,
+            didPlayer1Win: false,
+            leagueId: 4,
+            gameTypeId: 6
+        }
+        </code></pre>
         <pre><code>
         {
             success: true

@@ -26,10 +26,17 @@ if [ ${SHOULD_SAVE} = "y" ]; then
     echo "export ELOPHANT_USER_PASSWORD=${DB_PASS}" >> ~/.bash_profile
   fi
 
+  if ! grep -q ELOPHANT_ADMIN_PASSWORD ~/.bash_profile; then
+    read -p "What is the password of the database admin (username 'postgres'): " -s ADMIN_PASS
+    echo
+    echo "export ELOPHANT_ADMIN_PASSWORD=${ADMIN_PASS}" >> ~/.bash_profile
+  fi
+
   echo "please run 'source ~/.bash_profile'"
 else
   echo "Please manually set these environment variables:"
   echo "ELOPHANT_ENV=${ELOPHANT_ENV}"
   echo "ELOPHANT_GATEWAY=${ELOPHANT_GATEWAY}"
   echo "ELOPHANT_USER_PASSWORD=${DB_PASS}"
+  echo "ELOPHANT_ADMIN_PASSWORD=${ADMIN_PASS}"
 fi

@@ -33,10 +33,7 @@ if docker ps -a | grep -q ${VOLUME_CONTAINER_NAME}; then
 else
   docker create -v /var/log/postgresql -v /var/lib/postgresql --name ${VOLUME_CONTAINER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION} /bin/true
   echo "You've created a fresh database file system. You need to run the first-setup-database.sh server script, then re-run this deploy-database.sh script"
-  exit 0
 fi
 
 echo "Starting a new database container..."
-read -p "Please enter the password of the admin user (username 'postgres'): " -s ADMIN_PASS
-echo
-docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} -p ${DATABASE_PORT_INTERNAL}:${DATABASE_PORT_EXTERNAL} -e POSTGRES_PASSWORD=${ADMIN_PASS} --name ${DATABASE_NAME} ${REPOSITORY}/${IMAGE}:${VERSION}
+docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} -p ${DATABASE_PORT_INTERNAL}:${DATABASE_PORT_EXTERNAL} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} --name ${DATABASE_NAME} ${REPOSITORY}/${IMAGE}:${VERSION}
