@@ -16,7 +16,7 @@ trait BaseDao {
     Logger.info("Executing SQL <" + id + ">: " + toSqlFn(query))
     db.run(action).recover {
       case (e: Throwable) =>
-        Logger.error("SQL action error: \n" + e.getMessage)
+        Logger.error("SQL action error: \n" + e)
         throw e
     }.map {
       case res =>
