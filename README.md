@@ -104,18 +104,13 @@ Typically each server has an associated client-script to build and release, and 
 * Locally, run resources/client-scripts/build-and-release-db.sh (or use an existing db image)
 * On the docker host, run /usr/local/bin/deploy-database.sh
 
-### View the database
-You view the database by running an interactive database service (the service is different than the data itself)
-Connect to the docker host, then:
+### View/Modify the database
+You can connect to the database just like any other client, using any tool. Usually it's easiest to use the basic
+postgres client:
 ```
-> docker run -ti --rm --volumes-from elophant_data -e POSTGRES_PASSWORD=<ADMIN_PASSWORD_FROM_SETTING_UP_DATABASE> bcokert/elophant-db:latest /bin/bash
-> # In the container:
-> su postgres
-> /var/lib/postgres/9.4/bin/postgres &
-> psql
-> \connect elophant
+> psql postgresql://0.0.0.0:5432/elophant -U elophantuser
 ```
-You are now connected to the psql interface, and can run standard postgres commands to query/update the database
+Any changes made here will be seen in the next request by the server, since you are essential just another client
 
 ### View server logs
 Since all servers are just containers that run a single process, they can print their logs to stdout

@@ -12,11 +12,11 @@ trait BaseDao {
 
   private def sqlActionWithLogging[A, C <: Effect, E, D <: Table[E]](action: DBIOAction[A, NoStream, C], query: Query[D, E, Seq])(toSqlFn: Query[D, E, Seq] => String, loggingFn: A => String)
     (implicit db: JdbcBackend#DatabaseDef): Future[A] = {
-    val id = Random.nextInt()
+    val id = Math.abs(Random.nextInt())
     Logger.info("Executing SQL <" + id + ">: " + toSqlFn(query))
     db.run(action).recover {
       case (e: Throwable) =>
-        Logger.error(e.getMessage)
+        Logger.error("SQL action error: \n" + e.getMessage)
         throw e
     }.map {
       case res =>
@@ -39,5 +39,10 @@ trait BaseDao {
 
   def insert[B, A <: Table[B]](query: TableQuery[A])(row: B)(implicit db: JdbcBackend#DatabaseDef): Future[Unit] = {
     sqlActionWithLogging(DBIO.seq(query += row), query)(_.insertStatement, _ => "success")
+  }
+
+  def upsert[B, A<: Table[B]](query: TableQuery[A])(row: B)(implicit db: JdbcBackend#DatabaseDef): Future[Int] = {
+    Logger.info(s"Attempting insertOrUpdate with row $row")
+    sqlActionWithLogging(query.insertOrUpdate(row), query)(_.insertStatement, _.toString)
   }
 }

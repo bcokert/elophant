@@ -32,6 +32,8 @@ if docker ps -a | grep -q ${VOLUME_CONTAINER_NAME}; then
   echo "Volume container already created..."
 else
   docker create -v /var/log/postgresql -v /var/lib/postgresql --name ${VOLUME_CONTAINER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION} /bin/true
+  echo "You've created a fresh database file system. You need to run the first-setup-database.sh server script, then re-run this deploy-database.sh script"
+  exit 0
 fi
 
 echo "Starting a new database container..."

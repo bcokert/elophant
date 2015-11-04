@@ -23,6 +23,10 @@ GET     /gameType/:id                 controllers.GameTypeController.getGameType
 POST    /gameType/                    controllers.GameTypeController.addGameType()
 DELETE  /gameType/:id                 controllers.GameTypeController.deleteGameType(id: Int)
 
+# Ratings
+GET     /eloRating/                 controllers.EloRatingController.getEloRatings(playerId: Option[Int], leagueId: Option[Int], gameTypeId: Option[Int])
+POST    /gameResult/                 controllers.EloRatingController.addGameResult()
+
 # Static endpoints for testing
 GET     /expectedEloChange          controllers.Static.expectedEloChange(ratingA: Option[Int], ratingB: Option[Int], score: Option[Double])
 
