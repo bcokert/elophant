@@ -1,6 +1,6 @@
 name := """elophant"""
 
-version := "0.2.1"
+version := "0.2.2"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -17,8 +17,11 @@ libraryDependencies ++= Seq(
   "com.typesafe.slick" %% "slick" % "3.1.0",
   "org.slf4j" % "slf4j-nop" % "1.6.4",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-  "org.mockito" % "mockito-all" % "1.10.19" % "test"
+  "org.mockito" % "mockito-all" % "1.10.19" % "test",
+  "org.scalatestplus" %% "play" % "1.4.0-M3" % "test"
 )
+
+javaOptions in Test += "-Dconfig.file=conf/application-test.conf"
 
 //coverageMinimum := 80
 
