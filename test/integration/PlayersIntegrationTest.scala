@@ -1,16 +1,10 @@
 package integration
 
-import dao.PlayersDao
-import models.Player
 import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
-import play.api.{Play, Logger}
-import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.json._
-import play.api.test._
 import play.api.test.Helpers._
-import scala.concurrent.duration._
-import slick.driver.JdbcProfile
+import play.api.Logger
 import slick.driver.PostgresDriver.api._
 
 class PlayersIntegrationTest extends BaseIntegrationTest {
@@ -21,31 +15,94 @@ class PlayersIntegrationTest extends BaseIntegrationTest {
     }
   }
 
+  "GET /player/$id" should "return the player" in {
+    withDatabase { db =>
+      waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(7, 'bob', 'smith', 'bob.smith@hotmail.com');"))
+
+      testRequestAndVerify(GET, "/player/7") {
+        Json.obj(
+          "id" -> 7,
+          "firstName" -> "bob",
+          "lastName" -> "smith",
+          "email" -> "bob.smith@hotmail.com"
+        )
+      }
+    }
+  }
+
   "GET /player/" should "return an empty list when no players exist" in {
-    val response = testRequest(GET, "/player/")
-    status(response) should equal(200)
-    contentAsJson(response) should equal(Json.arr())
+    testRequestAndVerify(GET, "/player/") {
+      Json.arr()
+    }
   }
 
   it should "return all players if there are any" in {
     withDatabase { db =>
-      waitFor(db.run(sqlu"INSERT INTO player(first_name, last_name, email) VALUES('bob', 'smith', 'bob.smith@hotmail.com');"))
-      waitFor(db.run(sqlu"INSERT INTO player(first_name, last_name, email) VALUES('jim', 'thompson', 'jim@work.com');"))
+      waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(4, 'bob', 'smith', 'bob.smith@hotmail.com');"))
+      waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(5, 'jim', 'thompson', 'jim@work.com');"))
 
-      val response = testRequest(GET, "/player/")
-      status(response) should equal(200)
+      testRequestAndVerify(GET, "/player/") {
+        Json.arr(
+          Json.obj(
+            "id" -> 4,
+            "firstName" -> "bob",
+            "lastName" -> "smith",
+            "email" -> "bob.smith@hotmail.com"
+          ),
+          Json.obj(
+            "id" -> 5,
+            "firstName" -> "jim",
+            "lastName" -> "thompson",
+            "email" -> "jim@work.com"
+          )
+        )
+      }
+    }
+  }
 
-      val results = contentAsJson(response).as[JsArray].value
+  "POST /player/" should "create a new player" in {
+    val data = Json.obj(
+      "firstName" -> "johnny",
+      "lastName" -> "pinkerton",
+      "email" -> "john.pinkerton@work.com"
+    )
+    testRequestWithJsonAndVerify(POST, "/player/", data) {
+      Json.obj("success" -> true)
+    }
 
-      results.size should equal(2)
+    testRequestAndManuallyVerify(GET, "/player/") { results =>
+      val res = results.as[JsArray].value
+      res.size should equal(1)
 
-      (results.head \ "firstName").get should equal(JsString("bob"))
-      (results.head \ "lastName").get should equal(JsString("smith"))
-      (results.head \ "email").get should equal(JsString("bob.smith@hotmail.com"))
+      (res.head \ "firstName").get should equal(JsString("johnny"))
+      (res.head \ "lastName").get should equal(JsString("pinkerton"))
+      (res.head \ "email").get should equal(JsString("john.pinkerton@work.com"))
+    }
+  }
 
-      (results(1) \ "firstName").get should equal(JsString("jim"))
-      (results(1) \ "lastName").get should equal(JsString("thompson"))
-      (results(1) \ "email").get should equal(JsString("jim@work.com"))
+  "DELETE /player/$id" should "delete the player with the given id" in {
+    withDatabase { db =>
+      waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(3, 'bob', 'smith', 'bob.smith@hotmail.com');"))
+
+      testRequestAndVerify(DELETE, s"/player/3") {
+        Json.obj(
+          "success" -> true
+        )
+      }
+
+      testRequestAndVerify(GET, "/player/") {
+        Json.arr()
+      }
+    }
+  }
+
+  it should "return a failure response if the player doesn't exist" in {
+    withDatabase { db =>
+      testRequestAndVerify(DELETE, "/player/9") {
+        Json.obj(
+          "success" -> false
+        )
+      }
     }
   }
 }

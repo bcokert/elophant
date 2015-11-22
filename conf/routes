@@ -11,12 +11,6 @@ GET     /player/:id                 controllers.PlayerController.getPlayer(id: I
 POST    /player/                    controllers.PlayerController.addPlayer()
 DELETE  /player/:id                 controllers.PlayerController.deletePlayer(id: Int)
 
-# Leagues
-GET     /league/                    controllers.LeagueController.getLeagues
-GET     /league/:id                 controllers.LeagueController.getLeague(id: Int)
-POST    /league/                    controllers.LeagueController.addLeague()
-DELETE  /league/:id                 controllers.LeagueController.deleteLeague(id: Int)
-
 # GameTypes
 GET     /gameType/                    controllers.GameTypeController.getGameTypes
 GET     /gameType/:id                 controllers.GameTypeController.getGameType(id: Int)
@@ -24,11 +18,8 @@ POST    /gameType/                    controllers.GameTypeController.addGameType
 DELETE  /gameType/:id                 controllers.GameTypeController.deleteGameType(id: Int)
 
 # Ratings
-GET     /eloRating/                 controllers.EloRatingController.getEloRatings(playerId: Option[Int], leagueId: Option[Int], gameTypeId: Option[Int])
+GET     /eloRating/                 controllers.EloRatingController.getEloRatings(playerId: Option[Int], gameTypeId: Option[Int])
 POST    /gameResult/                 controllers.EloRatingController.addGameResult()
-
-# Static endpoints for testing
-GET     /expectedEloChange          controllers.Static.expectedEloChange(ratingA: Option[Int], ratingB: Option[Int], score: Option[Double])
 
 # Static Assets
 GET     /static/*file               controllers.Assets.at(path="/public", file)

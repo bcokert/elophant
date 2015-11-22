@@ -1,5 +1,3 @@
-# TestUser Schema
-
 # --- !Ups
 
 CREATE TABLE player (
@@ -7,12 +5,6 @@ CREATE TABLE player (
   first_name varchar(255) NOT NULL,
   last_name varchar(255) NOT NULL,
   email varchar(255) NOT NULL,
-  PRIMARY KEY (id)
-);
-
-CREATE TABLE league (
-  id SERIAL,
-  name varchar(255) NOT NULL,
   PRIMARY KEY (id)
 );
 
@@ -27,7 +19,6 @@ CREATE TABLE rating (
   id SERIAL,
   elo_rating integer NOT NULL,
   player_id int REFERENCES player (id),
-  league_id int REFERENCES league (id),
   game_type_id int REFERENCES game_type (id),
   PRIMARY KEY (id)
 );
@@ -36,6 +27,6 @@ CREATE TABLE rating (
 
 DROP TABLE player;
 
-DROP TABLE league;
-
 DROP TABLE game_type;
+
+DROP TABLE rating;

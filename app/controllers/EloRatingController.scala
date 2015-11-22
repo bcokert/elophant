@@ -14,47 +14,37 @@ import scala.concurrent.duration._
 
 class EloRatingController extends Controller {
 
-  def getEloRatings(maybePlayerId: Option[Int], maybeLeagueId: Option[Int], maybeGameTypeId: Option[Int]) = Action {
-    val badRequestJson = Json.obj(
-      "success" -> false,
-      "reason" -> "Not yet supported. Please provide 0, 1, or 3 query params"
-    )
-
-    (maybePlayerId, maybeLeagueId, maybeGameTypeId) match {
-      case (Some(playerId), Some(leagueId), Some(gameTypeId)) => Ok(Json.toJson(Await.result(EloRatingsDao.getRating(playerId, leagueId, gameTypeId), 5.seconds))).as("application/json")
-      case (Some(playerId), Some(leagueId), None) => BadRequest(badRequestJson).as("application/json")
-      case (Some(playerId), None, Some(gameTypeId)) => BadRequest(badRequestJson).as("application/json")
-      case (None, Some(leagueId), Some(gameTypeId)) => BadRequest(badRequestJson).as("application/json")
-      case (Some(playerId), None, None) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatingsByPlayerId(playerId), 5.seconds).map(Json.toJson(_)))).as("application/json")
-      case (None, Some(leagueId), None) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatingsByLeagueId(leagueId), 5.seconds).map(Json.toJson(_)))).as("application/json")
-      case (None, None, Some(gameTypeId)) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatingsByGameTypeId(gameTypeId), 5.seconds).map(Json.toJson(_)))).as("application/json")
-      case (None, None, None) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatings, 5.seconds).map(Json.toJson(_)))).as("application/json")
+  def getEloRatings(maybePlayerId: Option[Int], maybeGameTypeId: Option[Int]) = Action {
+    (maybePlayerId, maybeGameTypeId) match {
+      case (Some(playerId), Some(gameTypeId)) => Ok(Json.toJson(Await.result(EloRatingsDao.getRating(playerId, gameTypeId), 5.seconds))).as("application/json")
+      case (Some(playerId), None) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatingsByPlayerId(playerId), 5.seconds))).as("application/json")
+      case (None, Some(gameTypeId)) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatingsByGameTypeId(gameTypeId), 5.seconds))).as("application/json")
+      case (None, None) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatings, 5.seconds))).as("application/json")
     }
   }
 
   def addGameResult() = Action(parse.json) { request =>
     Json.fromJson[GameResult](request.body) match {
       case JsSuccess(g: GameResult, _) =>
-        val (player1Id, player2Id, score, leagueId, gameTypeId) = (
+        val (player1Id, player2Id, score, gameTypeId) = (
           g.player1Id,
           g.player2Id,
           if (g.didPlayer1Win) 1 else 0,
-          g.leagueId,
           g.gameTypeId)
 
-        val futureRating1 = EloRatingsDao.getRating(player1Id, leagueId, gameTypeId).map(r => (r.id, r.rating)).recover {
-          case e => Logger.info(s"No rating found for player $player1Id and league $leagueId and game type $gameTypeId. Setting to 1000 by default"); (0, 1000)
+        val futureRating1 = EloRatingsDao.getRating(player1Id, gameTypeId).map(r => (r.id, r.rating)).recover {
+          case e => Logger.info(s"No rating found for player $player1Id and game type $gameTypeId. Setting to 1000 by default"); (0, 1000)
         }
-        val futureRating2 = EloRatingsDao.getRating(player2Id, leagueId, gameTypeId).map(r => (r.id, r.rating)).recover {
-          case e => Logger.info(s"No rating found for player $player2Id and league $leagueId and game type $gameTypeId. Setting to 1000 by default"); (0, 1000)
+        val futureRating2 = EloRatingsDao.getRating(player2Id, gameTypeId).map(r => (r.id, r.rating)).recover {
+          case e => Logger.info(s"No rating found for player $player2Id and game type $gameTypeId. Setting to 1000 by default"); (0, 1000)
         }
 
         val updates = for {
           (eloid1, rating1) <- futureRating1
           (eloid2, rating2) <- futureRating2
           deltaRating = StandardEloCalculator.getDeltaRating(rating1, rating2, score)
-          elo1WasUpdated <- EloRatingsDao.updateEloRating(EloRating(eloid1, rating1 + deltaRating, player1Id, leagueId, gameTypeId))
-          elo2WasUpdated <- EloRatingsDao.updateEloRating(EloRating(eloid2, rating2 - deltaRating, player2Id, leagueId, gameTypeId))
+          elo1WasUpdated <- EloRatingsDao.updateEloRating(EloRating(eloid1, rating1 + deltaRating, player1Id, gameTypeId))
+          elo2WasUpdated <- EloRatingsDao.updateEloRating(EloRating(eloid2, rating2 - deltaRating, player2Id, gameTypeId))
         } yield (elo1WasUpdated, elo2WasUpdated)
 
         Await.result(updates, 5.seconds) match {
