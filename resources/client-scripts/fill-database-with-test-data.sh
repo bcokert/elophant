@@ -28,6 +28,19 @@ INSERT INTO rating(elo_rating, player_id, game_type_id) values(1010, 1, 3);
 INSERT INTO rating(elo_rating, player_id, game_type_id) values(990, 2, 3);
 INSERT INTO rating(elo_rating, player_id, game_type_id) values(1121, 4, 3);
 INSERT INTO rating(elo_rating, player_id, game_type_id) values(879, 5, 3);
+
+DELETE FROM app;
+INSERT INTO app(id, name, owner_name, description, auth_token) values(1, 'TestApp1', 'Owner1', 'Test App 1', 'e>gC<3mif5zV>2oMHpaihH<dPvFVq`FSLThtxOMUEo@lM`Y??<SXzs^SW/NsjVAY');
+INSERT INTO app(id, name, owner_name, description, auth_token) values(2, 'TestApp2', 'Owner2', 'Test App 2', '1ax?R=fJ?SgzWbC@RI9NLmA=HF_`BOmt;1@ZgxpqkT`S_^rk>CkYgZ?9[y;MkMxu');
+
+DELETE FROM permission;
+INSERT INTO permission(permission_level, permission_type, auth_token_id) values('READ', 'PLAYER', 1);
+INSERT INTO permission(permission_level, permission_type, auth_token_id) values('READ', 'GAME_TYPE', 1);
+INSERT INTO permission(permission_level, permission_type, auth_token_id) values('UPDATE', 'RATING', 1);
+
+INSERT INTO permission(permission_level, permission_type, auth_token_id) values('DELETE', 'PLAYER', 2);
+INSERT INTO permission(permission_level, permission_type, auth_token_id) values('DELETE', 'GAME_TYPE', 2);
+INSERT INTO permission(permission_level, permission_type, auth_token_id) values('UPDATE', 'RATING', 2);
 EOF
 
 psql -h $1 -p $2 -d elophant -U elophantuser -c "${COMMANDS}"

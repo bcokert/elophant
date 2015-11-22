@@ -25,8 +25,9 @@ CREATE TABLE rating (
 
 # --- !Downs
 
-DROP TABLE player;
+DROP TABLE rating CASCADE;
 
-DROP TABLE game_type;
+DROP TABLE player CASCADE;
 
-DROP TABLE rating;
+DROP TABLE game_type CASCADE;
+
