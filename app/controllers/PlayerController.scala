@@ -1,19 +1,23 @@
 package controllers
 
-import models.{GenericIsSuccess, Player}
+import dto.response.GenericSuccessResponse
+import models.Player
 import play.api.mvc._
 import play.api.Logger
 import play.api.libs.json._
 import dao.PlayersDao
 import error.jsonErrorWrites
+import types.{PermissionLevels, PermissionTypes}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class PlayerController extends Controller {
+class PlayerController extends Controller with AccessControl {
 
-  def getPlayer(id: Int) = Action {
-    Ok(Json.toJson(Await.result(PlayersDao.getPlayer(id), 5.seconds))).as("application/json")
+  def getPlayer(id: Int) = AccessControlledAction(Map(PermissionTypes.PLAYER -> PermissionLevels.READ)) {
+    Action {
+      Ok(Json.toJson(Await.result(PlayersDao.getPlayer(id), 5.seconds))).as("application/json")
+    }
   }
 
   def getPlayers = Action {
@@ -39,8 +43,8 @@ class PlayerController extends Controller {
 
   def deletePlayer(id: Int) = Action {
     Ok(Json.toJson(Await.result(PlayersDao.deletePlayer(id), 5.seconds) match {
-      case 1 => GenericIsSuccess(true)
-      case 0 => GenericIsSuccess(false)
+      case 1 => GenericSuccessResponse(true)
+      case 0 => GenericSuccessResponse(false)
     })).as("application/json")
 }
 }

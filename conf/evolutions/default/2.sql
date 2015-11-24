@@ -21,7 +21,7 @@ CREATE TABLE permission (
   id SERIAL,
   permission_level permission_level NOT NULL,
   permission_type varchar(50) REFERENCES permission_type (type),
-  auth_token_id integer REFERENCES app (id),
+  app_id integer REFERENCES app (id),
   PRIMARY KEY (id)
 );
 

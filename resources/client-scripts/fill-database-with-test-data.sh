@@ -34,13 +34,13 @@ INSERT INTO app(id, name, owner_name, description, auth_token) values(1, 'TestAp
 INSERT INTO app(id, name, owner_name, description, auth_token) values(2, 'TestApp2', 'Owner2', 'Test App 2', '1ax?R=fJ?SgzWbC@RI9NLmA=HF_`BOmt;1@ZgxpqkT`S_^rk>CkYgZ?9[y;MkMxu');
 
 DELETE FROM permission;
-INSERT INTO permission(permission_level, permission_type, auth_token_id) values('READ', 'PLAYER', 1);
-INSERT INTO permission(permission_level, permission_type, auth_token_id) values('READ', 'GAME_TYPE', 1);
-INSERT INTO permission(permission_level, permission_type, auth_token_id) values('UPDATE', 'RATING', 1);
+INSERT INTO permission(permission_level, permission_type, app_id) values('READ', 'PLAYER', 1);
+INSERT INTO permission(permission_level, permission_type, app_id) values('READ', 'GAME_TYPE', 1);
+INSERT INTO permission(permission_level, permission_type, app_id) values('UPDATE', 'RATING', 1);
 
-INSERT INTO permission(permission_level, permission_type, auth_token_id) values('DELETE', 'PLAYER', 2);
-INSERT INTO permission(permission_level, permission_type, auth_token_id) values('DELETE', 'GAME_TYPE', 2);
-INSERT INTO permission(permission_level, permission_type, auth_token_id) values('UPDATE', 'RATING', 2);
+INSERT INTO permission(permission_level, permission_type, app_id) values('DELETE', 'PLAYER', 2);
+INSERT INTO permission(permission_level, permission_type, app_id) values('DELETE', 'GAME_TYPE', 2);
+INSERT INTO permission(permission_level, permission_type, app_id) values('UPDATE', 'RATING', 2);
 EOF
 
 psql -h $1 -p $2 -d elophant -U elophantuser -c "${COMMANDS}"

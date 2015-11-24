@@ -6,6 +6,8 @@ import play.api.libs.json._
 import play.api.test.Helpers._
 import play.api.Logger
 import slick.driver.PostgresDriver.api._
+import org.scalatest._
+import types.{PermissionLevels, PermissionTypes}
 
 class PlayersIntegrationTest extends BaseIntegrationTest {
 
@@ -16,6 +18,7 @@ class PlayersIntegrationTest extends BaseIntegrationTest {
   }
 
   "GET /player/$id" should "return the player" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.READ))
     withDatabase { db =>
       waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(7, 'bob', 'smith', 'bob.smith@hotmail.com');"))
 

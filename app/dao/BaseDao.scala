@@ -1,5 +1,6 @@
 package dao
 
+import org.apache.commons.lang3.exception.ExceptionUtils
 import play.api.Logger
 import slick.dbio.DBIO
 import slick.jdbc.JdbcBackend
@@ -16,7 +17,7 @@ trait BaseDao {
     Logger.info("Executing SQL <" + id + ">: " + toSqlFn(query))
     db.run(action).recover {
       case (e: Throwable) =>
-        Logger.error("SQL action error: \n" + e)
+        Logger.error(s"SQL action error <$id>: \n${e.getMessage}\n${ExceptionUtils.getStackTrace(e)}\n")
         throw e
     }.map {
       case res =>

@@ -2,8 +2,9 @@ package controllers
 
 import _root_.util.StandardEloCalculator
 import dao.EloRatingsDao
+import dto.response.GenericSuccessResponse
 import error.jsonErrorWrites
-import models.{GameResult, GenericIsSuccess, EloRating}
+import models.{GameResult, EloRating}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
@@ -48,7 +49,7 @@ class EloRatingController extends Controller {
         } yield (elo1WasUpdated, elo2WasUpdated)
 
         Await.result(updates, 5.seconds) match {
-          case (1, 1) => Ok(Json.toJson(GenericIsSuccess(true))).as("application/json)")
+          case (1, 1) => Ok(Json.toJson(GenericSuccessResponse(true))).as("application/json)")
           case (0, 1) => BadRequest(Json.obj(
             "success" -> JsBoolean(false),
             "reason" -> s"Player $player1Id's elo did not update correctly"

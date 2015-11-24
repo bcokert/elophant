@@ -1,8 +1,9 @@
 package controllers
 
 import dao.GameTypesDao
+import dto.response.GenericSuccessResponse
 import error.jsonErrorWrites
-import models.{GenericIsSuccess, GameType}
+import models.GameType
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
@@ -39,8 +40,8 @@ class GameTypeController extends Controller {
 
   def deleteGameType(id: Int) = Action {
     Ok(Json.toJson(Await.result(GameTypesDao.deleteGameType(id), 5.seconds) match {
-      case 1 => GenericIsSuccess(true)
-      case 0 => GenericIsSuccess(false)
+      case 1 => GenericSuccessResponse(true)
+      case 0 => GenericSuccessResponse(false)
     })).as("application/json")
 }
 }

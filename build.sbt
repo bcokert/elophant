@@ -1,6 +1,6 @@
 name := """elophant"""
 
-version := "0.3.0"
+version := "0.4.0"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
@@ -20,6 +20,8 @@ libraryDependencies ++= Seq(
   "org.mockito" % "mockito-all" % "1.10.19" % "test",
   "org.scalatestplus" %% "play" % "1.4.0-M3" % "test"
 )
+
+testOptions in Test += Tests.Argument("-oDF")
 
 javaOptions in Test += "-Dconfig.file=conf/application-test.conf"
 
