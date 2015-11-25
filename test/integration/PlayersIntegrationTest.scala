@@ -1,5 +1,6 @@
 package integration
 
+import dto.response.AccessControlFailureResponse
 import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
 import play.api.libs.json._
@@ -33,13 +34,22 @@ class PlayersIntegrationTest extends BaseIntegrationTest {
     }
   }
 
+  it should "fail if you don't have the necessary permissions" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.NONE))
+    testRequestAndVerify(GET, "/player/19", expectedResponseCode = FORBIDDEN) {
+      Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.PLAYER, PermissionLevels.NONE, PermissionLevels.READ)))
+    }
+  }
+
   "GET /player/" should "return an empty list when no players exist" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.READ))
     testRequestAndVerify(GET, "/player/") {
       Json.arr()
     }
   }
 
   it should "return all players if there are any" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.READ))
     withDatabase { db =>
       waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(4, 'bob', 'smith', 'bob.smith@hotmail.com');"))
       waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(5, 'jim', 'thompson', 'jim@work.com');"))
@@ -63,7 +73,15 @@ class PlayersIntegrationTest extends BaseIntegrationTest {
     }
   }
 
+  it should "fail if you don't have the necessary permissions" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.NONE))
+    testRequestAndVerify(GET, "/player/", expectedResponseCode = FORBIDDEN) {
+      Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.PLAYER, PermissionLevels.NONE, PermissionLevels.READ)))
+    }
+  }
+
   "POST /player/" should "create a new player" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.CREATE))
     val data = Json.obj(
       "firstName" -> "johnny",
       "lastName" -> "pinkerton",
@@ -83,7 +101,20 @@ class PlayersIntegrationTest extends BaseIntegrationTest {
     }
   }
 
+  it should "fail if you don't have the necessary permissions" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.READ))
+    val data = Json.obj(
+      "firstName" -> "johnny",
+      "lastName" -> "pinkerton",
+      "email" -> "john.pinkerton@work.com"
+    )
+    testRequestWithJsonAndVerify(POST, "/player/", data, expectedResponseCode = FORBIDDEN) {
+      Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.PLAYER, PermissionLevels.READ, PermissionLevels.CREATE)))
+    }
+  }
+
   "DELETE /player/$id" should "delete the player with the given id" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.DELETE))
     withDatabase { db =>
       waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(3, 'bob', 'smith', 'bob.smith@hotmail.com');"))
 
@@ -100,12 +131,20 @@ class PlayersIntegrationTest extends BaseIntegrationTest {
   }
 
   it should "return a failure response if the player doesn't exist" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.DELETE))
     withDatabase { db =>
       testRequestAndVerify(DELETE, "/player/9") {
         Json.obj(
           "success" -> false
         )
       }
+    }
+  }
+
+  it should "fail if you don't have the necessary permissions" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.UPDATE))
+    testRequestAndVerify(DELETE, "/player/19", expectedResponseCode = FORBIDDEN) {
+      Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.PLAYER, PermissionLevels.UPDATE, PermissionLevels.DELETE)))
     }
   }
 }
