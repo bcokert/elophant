@@ -16,7 +16,7 @@ import scala.concurrent.duration._
 import org.scalatestplus.play._
 import scala.concurrent.{Await, Future}
 import language.implicitConversions
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import slick.driver.PostgresDriver.api._
 
 trait BaseIntegrationTest extends FlatSpec with Matchers with BeforeAndAfterEach with TestUtils with OneAppPerSuite {

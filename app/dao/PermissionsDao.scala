@@ -8,7 +8,7 @@ import slick.lifted.Tag
 import slick.driver.PostgresDriver.api._
 import types.{PermissionLevels, PermissionLevel, PermissionType, PermissionTypes}
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.util.Random
 
 case class Permission(id: Int, permissionLevel: PermissionLevel, permissionType: PermissionType, appId: Int)

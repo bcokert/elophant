@@ -10,7 +10,7 @@ import play.api.libs.json._
 import play.api.mvc._
 
 import scala.concurrent.{Future, Await}
-import scala.concurrent.ExecutionContext.Implicits.global
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.duration._
 
 class EloRatingController extends Controller {
