@@ -1,7 +1,7 @@
 package integration
 
 import dto.response.AccessControlFailureResponse
-import models.EloRating
+import models.{GameType, GameResult, EloRating}
 import play.api.libs.json._
 import play.api.test.Helpers._
 import play.api.Logger
@@ -81,8 +81,10 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       "name" -> "foosball",
       "description" -> "that one with the red balls"
     )
-    testRequestWithJsonAndVerify(POST, "/gameType/", data) {
-      Json.obj("success" -> true)
+
+    testRequestWithJsonAndManuallyVerify(POST, "/gameType/", data) { result =>
+      (result \ "name").get should equal(JsString("foosball"))
+      (result \ "description").get should equal(JsString("that one with the red balls"))
     }
 
     testRequestAndManuallyVerify(GET, "/gameType/") { results =>
@@ -195,8 +197,10 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       "lastName" -> "pinkerton",
       "email" -> "john.pinkerton@work.com"
     )
-    testRequestWithJsonAndVerify(POST, "/player/", data) {
-      Json.obj("success" -> true)
+    testRequestWithJsonAndManuallyVerify(POST, "/player/", data) { result =>
+      (result \ "firstName").get should equal(JsString("johnny"))
+      (result \ "lastName").get should equal(JsString("pinkerton"))
+      (result \ "email").get should equal(JsString("john.pinkerton@work.com"))
     }
 
     testRequestAndManuallyVerify(GET, "/player/") { results =>

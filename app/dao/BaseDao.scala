@@ -1,5 +1,6 @@
 package dao
 
+import models.DatabaseModel
 import org.apache.commons.lang3.exception.ExceptionUtils
 import play.api.Logger
 import slick.dbio.DBIO
@@ -40,6 +41,10 @@ trait BaseDao {
 
   def insert[B, A <: Table[B]](query: TableQuery[A])(row: B)(implicit db: JdbcBackend#DatabaseDef): Future[Unit] = {
     sqlActionWithLogging(DBIO.seq(query += row), query)(_.insertStatement, _ => "success")
+  }
+
+  def insertAndReturnResult[B <: DatabaseModel, A <: Table[B]](query: TableQuery[A])(row: B, idExtractor: A => Rep[Int])(implicit db: JdbcBackend#DatabaseDef): Future[B] = {
+    sqlActionWithLogging((query returning query.map(idExtractor) into ((result, id) => result.copyWithId(id).asInstanceOf[B])) += row, query)(_.insertStatement, _.toString)
   }
 
   def upsert[B, A<: Table[B]](query: TableQuery[A])(row: B)(implicit db: JdbcBackend#DatabaseDef): Future[Int] = {

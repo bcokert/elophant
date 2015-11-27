@@ -23,6 +23,6 @@ object PlayersDao extends BaseDao {
 
   def getPlayer(id: Int): Future[Player] = queryOne(TableQuery[PlayersDao].filter(_.id === id))
   def getPlayers: Future[Seq[Player]] = query(TableQuery[PlayersDao])
-  def addPlayer(player: Player): Future[Unit] = insert[Player, PlayersDao](TableQuery[PlayersDao])(player)
+  def addPlayer(player: Player): Future[Player] = insertAndReturnResult[Player, PlayersDao](TableQuery[PlayersDao])(player, _.id)
   def deletePlayer(id: Int): Future[Int] = delete[Player, PlayersDao](TableQuery[PlayersDao].filter(_.id === id))
 }

@@ -30,10 +30,7 @@ class PlayerController extends Controller with AccessControl {
     Action(parse.json) { request =>
       Json.fromJson[Player](request.body) match {
         case JsSuccess(p: Player, _) =>
-          Await.result(PlayersDao.addPlayer(p), 5.seconds)
-          Ok(Json.obj(
-            "success" -> JsBoolean(true)
-          )).as("application/json")
+          Ok(Json.toJson(Await.result(PlayersDao.addPlayer(p), 5.seconds))).as("application/json")
         case err@JsError(_) =>
           Logger.error("Invalid Post Body for addPlayer: " + Json.toJson(err))
           BadRequest(Json.obj(

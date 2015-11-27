@@ -22,6 +22,6 @@ object GameTypesDao extends BaseDao {
 
   def getGameType(id: Int): Future[GameType] = queryOne(TableQuery[GameTypesDao].filter(_.id === id))
   def getGameTypes: Future[Seq[GameType]] = query(TableQuery[GameTypesDao])
-  def addGameType(gameType: GameType): Future[Unit] = insert[GameType, GameTypesDao](TableQuery[GameTypesDao])(gameType)
+  def addGameType(gameType: GameType): Future[GameType] = insertAndReturnResult[GameType, GameTypesDao](TableQuery[GameTypesDao])(gameType, _.id)
   def deleteGameType(id: Int): Future[Int] = delete[GameType, GameTypesDao](TableQuery[GameTypesDao].filter(_.id === id))
 }

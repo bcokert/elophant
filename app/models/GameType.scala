@@ -4,7 +4,9 @@ import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
 
-case class GameType(id: Int, name: String, description: String)
+case class GameType(id: Int, name: String, description: String) extends DatabaseModel {
+  def copyWithId(id: Int) = GameType(id, name, description)
+}
 
 object GameType {
   implicit val gameTypeReads: Reads[GameType] = (

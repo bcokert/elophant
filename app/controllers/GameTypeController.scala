@@ -30,10 +30,7 @@ class GameTypeController extends Controller with AccessControl {
     Action(parse.json) { request =>
       Json.fromJson[GameType](request.body) match {
         case JsSuccess(gameType: GameType, _) =>
-          Await.result(GameTypesDao.addGameType(gameType), 5.seconds)
-          Ok(Json.obj(
-            "success" -> JsBoolean(true)
-          )).as("application/json")
+          Ok(Json.toJson(Await.result(GameTypesDao.addGameType(gameType), 5.seconds))).as("application/json")
         case err@JsError(_) =>
           Logger.error("Invalid Post Body for addGameType: " + Json.toJson(err))
           BadRequest(Json.obj(
