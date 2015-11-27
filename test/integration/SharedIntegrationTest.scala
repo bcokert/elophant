@@ -1,22 +1,26 @@
 package integration
 
 import dto.response.AccessControlFailureResponse
+import models.EloRating
 import play.api.libs.json._
 import play.api.test.Helpers._
+import play.api.Logger
 import slick.driver.PostgresDriver.api._
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import slick.jdbc.JdbcBackend
 import types.{PermissionLevels, PermissionTypes}
+
+import scala.concurrent.Future
 
 class SharedIntegrationTest extends BaseIntegrationTest {
 
   override def resetDatabase(): Unit = {
     withDatabase { db =>
+      waitFor(db.run(sqlu"DELETE FROM rating;"))
       waitFor(db.run(sqlu"DELETE FROM player;"))
       waitFor(db.run(sqlu"DELETE FROM game_type;"))
     }
   }
-
-
-
 
 
   "GET /gameType/$id" should "return the gameType" in {
@@ -249,6 +253,189 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.UPDATE))
     testRequestAndVerify(DELETE, "/player/19", expectedResponseCode = FORBIDDEN) {
       Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.PLAYER, PermissionLevels.UPDATE, PermissionLevels.DELETE)))
+    }
+  }
+
+
+
+
+  private def setupRatingTests(db: JdbcBackend#DatabaseDef): Unit = {
+    waitFor(Future.sequence(Seq(
+      db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) values(1, 'test1first', 'test1last', 'test1@test.com');"),
+      db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) values(2, 'test2first', 'test2last', 'test2@test.com');"),
+      db.run(sqlu"INSERT INTO game_type(id, name, description) values(1, 'testGameType1', 'Test Game Type 1');"),
+      db.run(sqlu"INSERT INTO game_type(id, name, description) values(2, 'testGameType2', 'Test Game Type 2');")
+    )))
+    waitFor(Future.sequence(Seq(
+      db.run(sqlu"INSERT INTO rating(elo_rating, player_id, game_type_id) values(1111, 1, 1);"),
+      db.run(sqlu"INSERT INTO rating(elo_rating, player_id, game_type_id) values(1122, 1, 2);"),
+      db.run(sqlu"INSERT INTO rating(elo_rating, player_id, game_type_id) values(2211, 2, 1);"),
+      db.run(sqlu"INSERT INTO rating(elo_rating, player_id, game_type_id) values(2222, 2, 2);")
+    )))
+  }
+
+  "GET /eloRatings" should "return all ratings when no query params are sent" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.READ))
+    withDatabase { db =>
+      setupRatingTests(db)
+
+      testRequestAndManuallyVerify(GET, "/eloRating/") { results =>
+        Json.fromJson[Seq[EloRating]](results) match {
+          case JsSuccess(ratings, _) =>
+            ratings.sortBy(r => r.rating) should equal(Seq(
+              EloRating(0, 1111, 1, 1),
+              EloRating(0, 1122, 1, 2),
+              EloRating(0, 2211, 2, 1),
+              EloRating(0, 2222, 2, 2)
+            ).sortBy(r => r.rating))
+          case JsError(e) => fail("Was not able to parse response\n" + e)
+        }
+      }
+    }
+  }
+
+  it should "return only ratings by player id when a player id is requested" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.READ))
+    withDatabase { db =>
+      setupRatingTests(db)
+
+      testRequestAndManuallyVerify(GET, "/eloRating/?playerId=2") { results =>
+        Json.fromJson[Seq[EloRating]](results) match {
+          case JsSuccess(ratings, _) =>
+            ratings.sortBy(r => r.rating) should equal(Seq(
+              EloRating(0, 2211, 2, 1),
+              EloRating(0, 2222, 2, 2)
+            ).sortBy(r => r.rating))
+          case JsError(e) => fail("Was not able to parse response\n" + e)
+        }
+      }
+    }
+  }
+
+  it should "return only ratings by game type id when a game type id is requested" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.READ))
+    withDatabase { db =>
+      setupRatingTests(db)
+
+      testRequestAndManuallyVerify(GET, "/eloRating/?gameTypeId=1") { results =>
+        Json.fromJson[Seq[EloRating]](results) match {
+          case JsSuccess(ratings, _) =>
+            ratings.sortBy(r => r.rating) should equal(Seq(
+              EloRating(0, 1111, 1, 1),
+              EloRating(0, 2211, 2, 1)
+            ).sortBy(r => r.rating))
+          case JsError(e) => fail("Was not able to parse response\n" + e)
+        }
+      }
+    }
+  }
+
+  it should "return only 1 rating when game type id and player id are requested" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.READ))
+    withDatabase { db =>
+      setupRatingTests(db)
+
+      testRequestAndManuallyVerify(GET, "/eloRating/?playerId=2&gameTypeId=1") { results =>
+        Json.fromJson[EloRating](results) match {
+          case JsSuccess(rating, _) =>
+            rating should equal(EloRating(0, 2211, 2, 1))
+          case JsError(e) => fail("Was not able to parse response\n" + e)
+        }
+      }
+    }
+  }
+
+  it should "fail if you don't have the necessary permissions" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.NONE))
+    testRequestAndVerify(GET, "/eloRating/", expectedResponseCode = FORBIDDEN) {
+      Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.RATING, PermissionLevels.NONE, PermissionLevels.READ)))
+    }
+  }
+
+  "POST /gameResult" should "Update the ratings of two players after a series of results, and not affect other ratings" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.UPDATE))
+    withDatabase { db =>
+      setupRatingTests(db)
+
+      val gameResult = Json.obj(
+        "player1Id" -> 1,
+        "player2Id" -> 2,
+        "score" -> 1,
+        "gameTypeId" -> 1
+      )
+
+      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult) {
+        Json.obj("success" -> true)
+      }
+
+      testRequestAndManuallyVerify(GET, "/eloRating/") { results =>
+        Json.fromJson[Seq[EloRating]](results) match {
+          case JsSuccess(ratings, _) =>
+            ratings.sortBy(r => r.rating) should equal(Seq(
+              EloRating(0, 1127, 1, 1),
+              EloRating(0, 2195, 2, 1),
+              EloRating(0, 1122, 1, 2),
+              EloRating(0, 2222, 2, 2)
+            ).sortBy(r => r.rating))
+          case JsError(e) => fail("Was not able to parse response\n" + e)
+        }
+      }
+
+      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult) {
+        Json.obj("success" -> true)
+      }
+
+      testRequestAndManuallyVerify(GET, "/eloRating/") { results =>
+        Json.fromJson[Seq[EloRating]](results) match {
+          case JsSuccess(ratings, _) =>
+            ratings.sortBy(r => r.rating) should equal(Seq(
+              EloRating(0, 1143, 1, 1),
+              EloRating(0, 2179, 2, 1),
+              EloRating(0, 1122, 1, 2),
+              EloRating(0, 2222, 2, 2)
+            ).sortBy(r => r.rating))
+          case JsError(e) => fail("Was not able to parse response\n" + e)
+        }
+      }
+
+      val gameResult2 = Json.obj(
+        "player1Id" -> 1,
+        "player2Id" -> 2,
+        "score" -> 0,
+        "gameTypeId" -> 1
+      )
+
+      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult2) {
+        Json.obj("success" -> true)
+      }
+
+      testRequestAndManuallyVerify(GET, "/eloRating/") { results =>
+        Json.fromJson[Seq[EloRating]](results) match {
+          case JsSuccess(ratings, _) =>
+            ratings.sortBy(r => r.rating) should equal(Seq(
+              EloRating(0, 1143, 1, 1),
+              EloRating(0, 2179, 2, 1),
+              EloRating(0, 1122, 1, 2),
+              EloRating(0, 2222, 2, 2)
+            ).sortBy(r => r.rating))
+          case JsError(e) => fail("Was not able to parse response\n" + e)
+        }
+      }
+    }
+  }
+
+  it should "fail if you don't have the necessary permissions" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.CREATE))
+
+    val gameResult2 = Json.obj(
+      "player1Id" -> 1,
+      "player2Id" -> 2,
+      "score" -> 0,
+      "gameTypeId" -> 1
+    )
+
+    testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult2, expectedResponseCode = FORBIDDEN) {
+      Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.RATING, PermissionLevels.CREATE, PermissionLevels.UPDATE)))
     }
   }
 }

@@ -6,11 +6,11 @@ import play.api.libs.json._
 
 class GameResultTest extends FlatSpec with Matchers {
    "a GameResult" should "serialize into json" in {
-     val gameResult = GameResult(21, 55, didPlayer1Win = true, 1)
+     val gameResult = GameResult(21, 55, 0.7, 1)
      Json.toJson(gameResult) should equal(Json.obj(
        "player1Id" -> 21,
        "player2Id" -> 55,
-       "didPlayer1Win" -> true,
+       "score" -> 0.7,
        "gameTypeId" -> 1
      ))
    }
@@ -19,10 +19,10 @@ class GameResultTest extends FlatSpec with Matchers {
      val json = Json.obj(
        "player1Id" -> 21,
        "player2Id" -> 55,
-       "didPlayer1Win" -> true,
+       "score" -> 0.1,
        "gameTypeId" -> 1
      )
 
-     Json.fromJson[GameResult](json) should equal(JsSuccess(GameResult(21, 55, didPlayer1Win = true, 1)))
+     Json.fromJson[GameResult](json) should equal(JsSuccess(GameResult(21, 55, 0.1, 1)))
    }
  }
