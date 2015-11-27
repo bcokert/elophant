@@ -1,7 +1,6 @@
 package dao
 
 import models.DatabaseModel
-import org.apache.commons.lang3.exception.ExceptionUtils
 import play.api.Logger
 import slick.dbio.DBIO
 import slick.jdbc.JdbcBackend
@@ -16,11 +15,7 @@ trait BaseDao {
     (implicit db: JdbcBackend#DatabaseDef): Future[A] = {
     val id = Math.abs(Random.nextInt())
     Logger.info("Executing SQL <" + id + ">: " + toSqlFn(query))
-    db.run(action).recover {
-      case (e: Throwable) =>
-        Logger.error(s"SQL action error <$id>: \n${e.getMessage}\n${ExceptionUtils.getStackTrace(e)}\n")
-        throw e
-    }.map {
+    db.run(action).map {
       case res =>
         Logger.info("Result of SQL <" + id + ">: " + loggingFn(res))
         res
@@ -48,7 +43,6 @@ trait BaseDao {
   }
 
   def upsert[B, A<: Table[B]](query: TableQuery[A])(row: B)(implicit db: JdbcBackend#DatabaseDef): Future[Int] = {
-    Logger.info(s"Attempting insertOrUpdate with row $row")
     sqlActionWithLogging(query.insertOrUpdate(row), query)(_.insertStatement, _.toString)
   }
 }

@@ -29,6 +29,6 @@ object AppsDao extends BaseDao {
   def getAppByToken(token: String): Future[App] = queryOne(TableQuery[AppsDao].filter(_.authToken === token)).recoverWith {
     case (e: NoSuchElementException) =>
       Logger.info("Attempted to search for an app with a token that doesn't exist")
-      throw new AppNotFoundException(s"An app with the given token '$token' was not found")
+      throw new AppNotFoundException(s"An app with the given token '$token' was not found", e)
   }
 }

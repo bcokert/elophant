@@ -2,8 +2,8 @@ package controllers
 
 import _root_.util.StandardEloCalculator
 import dao.EloRatingsDao
-import dto.response.GenericSuccessResponse
-import error.jsonErrorWrites
+import dto.response.GenericResponse
+import exception.{GameTypeNotFoundException, PlayerNotFoundException, UnknownPSQLException}
 import models.{GameResult, EloRating}
 import play.api.Logger
 import play.api.libs.json._
@@ -48,32 +48,25 @@ class EloRatingController extends Controller with AccessControl {
             (eloid1, rating1) <- futureRating1
             (eloid2, rating2) <- futureRating2
             deltaRating = StandardEloCalculator.getDeltaRating(rating1, rating2, score)
-            elo1WasUpdated <- EloRatingsDao.updateEloRating(EloRating(eloid1, rating1 + deltaRating, player1Id, gameTypeId))
-            elo2WasUpdated <- EloRatingsDao.updateEloRating(EloRating(eloid2, rating2 - deltaRating, player2Id, gameTypeId))
+            elo1WasUpdated <- EloRatingsDao.updateEloRating(EloRating(eloid1, rating1 + deltaRating, player1Id, gameTypeId)).recover {
+              case e: PlayerNotFoundException => 0
+              case e: GameTypeNotFoundException => 0
+            }
+            elo2WasUpdated <- EloRatingsDao.updateEloRating(EloRating(eloid2, rating2 - deltaRating, player2Id, gameTypeId)).recover {
+              case e: PlayerNotFoundException => 0
+              case e: GameTypeNotFoundException => 0
+            }
           } yield (elo1WasUpdated, elo2WasUpdated)
 
           Await.result(updates, 5.seconds) match {
-            case (1, 1) => Ok(Json.toJson(GenericSuccessResponse(true))).as("application/json)")
-            case (0, 1) => BadRequest(Json.obj(
-              "success" -> JsBoolean(false),
-              "reason" -> s"Player $player1Id's elo did not update correctly"
-            )).as("application/json)")
-            case (1, 0) => BadRequest(Json.obj(
-              "success" -> JsBoolean(false),
-              "reason" -> s"Player $player2Id's elo did not update correctly"
-            )).as("application/json)")
-            case (0, 0) => BadRequest(Json.obj(
-              "success" -> JsBoolean(false),
-              "reason" -> s"Neither Players elo updated correctly"
-            )).as("application/json)")
+            case (1, 1) => Ok(Json.toJson(GenericResponse(success = true))).as("application/json)")
+            case (0, 1) => BadRequest(Json.toJson(GenericResponse(success = false, None, Some(Seq(s"Rating for Player '$player1Id' and Game Type '$gameTypeId' does not exist"))))).as("application/json)")
+            case (1, 0) => BadRequest(Json.toJson(GenericResponse(success = false, None, Some(Seq(s"Rating for Player '$player2Id' and Game Type '$gameTypeId' does not exist"))))).as("application/json)")
+            case (0, 0) => BadRequest(Json.toJson(GenericResponse(success = false, None, Some(Seq(player1Id, player2Id).map(id => s"Rating for Player '$id' and Game Type '$gameTypeId' does not exist"))))).as("application/json)")
           }
-        case err@JsError(_) =>
-          Logger.error("Invalid Post Body for addGameResult: " + Json.toJson(err))
-          BadRequest(Json.obj(
-            "success" -> JsBoolean(false),
-            "reason" -> "Invalid Post Body",
-            "errors" -> Json.toJson(err)
-          )).as("application/json)")
+        case JsError(e) =>
+          Logger.error("Invalid Post Body for addGameResult: " + e)
+          BadRequest(Json.toJson(GenericResponse(success = false, None, Some(e.map(_.toString()))))).as("application/json)")
       }
     }
   }

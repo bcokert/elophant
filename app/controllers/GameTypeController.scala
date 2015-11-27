@@ -1,8 +1,7 @@
 package controllers
 
 import dao.GameTypesDao
-import dto.response.GenericSuccessResponse
-import error.jsonErrorWrites
+import dto.response.GenericResponse
 import models.GameType
 import play.api.Logger
 import play.api.libs.json._
@@ -31,13 +30,9 @@ class GameTypeController extends Controller with AccessControl {
       Json.fromJson[GameType](request.body) match {
         case JsSuccess(gameType: GameType, _) =>
           Ok(Json.toJson(Await.result(GameTypesDao.addGameType(gameType), 5.seconds))).as("application/json")
-        case err@JsError(_) =>
-          Logger.error("Invalid Post Body for addGameType: " + Json.toJson(err))
-          BadRequest(Json.obj(
-            "success" -> JsBoolean(false),
-            "reason" -> "Invalid Post Body",
-            "errors" -> Json.toJson(err)
-          )).as("application/json)")
+        case JsError(e) =>
+          Logger.error("Invalid Post Body for addGameType: " + e)
+          BadRequest(Json.toJson(GenericResponse(success = false, None, Some(e.map(_.toString()))))).as("application/json)")
       }
     }
   }
@@ -45,8 +40,8 @@ class GameTypeController extends Controller with AccessControl {
   def deleteGameType(id: Int) = AccessControlledAction(Map(PermissionTypes.GAME_TYPE -> PermissionLevels.DELETE)) {
     Action {
       Ok(Json.toJson(Await.result(GameTypesDao.deleteGameType(id), 5.seconds) match {
-        case 1 => GenericSuccessResponse(true)
-        case 0 => GenericSuccessResponse(false)
+        case 1 => GenericResponse(success = true)
+        case 0 => GenericResponse(success = false, None, Some(Seq(s"Game Type with id '$id' does not exist")))
       })).as("application/json")
     }
   }

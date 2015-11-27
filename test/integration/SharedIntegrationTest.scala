@@ -118,7 +118,10 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     withDatabase { db =>
       testRequestAndVerify(DELETE, "/gameType/9") {
         Json.obj(
-          "success" -> false
+          "success" -> false,
+          "errorReasons" -> Json.arr(
+            "Game Type with id '9' does not exist"
+          )
         )
       }
     }
@@ -247,7 +250,10 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     withDatabase { db =>
       testRequestAndVerify(DELETE, "/player/9") {
         Json.obj(
-          "success" -> false
+          "success" -> false,
+          "errorReasons" -> Json.arr(
+            "Player with id '9' does not exist"
+          )
         )
       }
     }
@@ -440,6 +446,100 @@ class SharedIntegrationTest extends BaseIntegrationTest {
 
     testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult2, expectedResponseCode = FORBIDDEN) {
       Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.RATING, PermissionLevels.CREATE, PermissionLevels.UPDATE)))
+    }
+  }
+
+  it should "fail if player 1 does not exist" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.UPDATE))
+    withDatabase { db =>
+      setupRatingTests(db)
+
+      val gameResult = Json.obj(
+        "player1Id" -> 932457,
+        "player2Id" -> 2,
+        "score" -> 1,
+        "gameTypeId" -> 1
+      )
+
+      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult, expectedResponseCode = BAD_REQUEST) {
+        Json.obj(
+          "success" -> false,
+          "errorReasons" -> Json.arr(
+            "Rating for Player '932457' and Game Type '1' does not exist"
+          )
+        )
+      }
+    }
+  }
+
+  it should "fail if player 2 does not exist" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.UPDATE))
+    withDatabase { db =>
+      setupRatingTests(db)
+
+      val gameResult = Json.obj(
+        "player1Id" -> 1,
+        "player2Id" -> 244,
+        "score" -> 1,
+        "gameTypeId" -> 1
+      )
+
+      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult, expectedResponseCode = BAD_REQUEST) {
+        Json.obj(
+          "success" -> false,
+          "errorReasons" -> Json.arr(
+            "Rating for Player '244' and Game Type '1' does not exist"
+          )
+        )
+      }
+    }
+  }
+
+  it should "fail if both players do not exist" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.UPDATE))
+    withDatabase { db =>
+      setupRatingTests(db)
+
+      val gameResult = Json.obj(
+        "player1Id" -> 99,
+        "player2Id" -> 244,
+        "score" -> 1,
+        "gameTypeId" -> 1
+      )
+
+      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult, expectedResponseCode = BAD_REQUEST) {
+        Json.obj(
+          "success" -> false,
+          "errorReasons" -> Json.arr(
+            "Rating for Player '99' and Game Type '1' does not exist",
+            "Rating for Player '244' and Game Type '1' does not exist"
+          )
+        )
+      }
+    }
+  }
+
+  it should "fail if the game type does not exist" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.UPDATE))
+    withDatabase { db =>
+      setupRatingTests(db)
+
+      val gameResult = Json.obj(
+        "player1Id" -> 1,
+        "player2Id" -> 2,
+        "score" -> 1,
+        "gameTypeId" -> 9563
+      )
+
+      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult, expectedResponseCode = BAD_REQUEST) {
+        Json.obj(
+          "success" -> false,
+          "errorReasons" -> Json.arr(
+            "Rating for Player '1' and Game Type '9563' does not exist",
+            "Rating for Player '2' and Game Type '9563' does not exist"
+          )
+        )
+      }
     }
   }
 }
