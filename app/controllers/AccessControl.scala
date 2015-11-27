@@ -6,12 +6,9 @@ import play.api.mvc._
 import play.api.Logger
 import play.api.libs.json._
 import dao.{AppsDao, PermissionsDao}
-import error.jsonErrorWrites
 import types.{PermissionLevel, PermissionType, PermissionLevels}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration._
+import scala.concurrent.Future
 
 case class InadequatePermissions(permType: PermissionType, currentLevel: PermissionLevel, minimumLevel: PermissionLevel) {
   override def toString = s"$permType requires $minimumLevel, given $currentLevel"
@@ -66,5 +63,4 @@ trait AccessControl extends Controller {
 
     lazy val parser = action.parser
   }
-
 }
