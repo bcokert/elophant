@@ -66,7 +66,7 @@ class EloRatingController extends Controller with AccessControl {
           }
         case JsError(e) =>
           Logger.error("Invalid Post Body for addGameResult: " + e)
-          BadRequest(Json.toJson(GenericResponse(success = false, None, Some(e.map(_.toString()))))).as("application/json)")
+          BadRequest(Json.toJson(GenericResponse.fromJsonErrors(e))).as("application/json)")
       }
     }
   }

@@ -1,5 +1,6 @@
 package dto.response
 
+import models.Player
 import org.scalatest.{FlatSpec, Matchers}
 import play.api.libs.json._
 
@@ -22,5 +23,19 @@ class GenericResponseTest extends FlatSpec with Matchers {
     Json.toJson(response) should equal(Json.obj(
       "success" -> true
     ))
+  }
+
+  it should "display good looking errors for json errors, in sorted order" in {
+    val json = Json.obj("firstName" -> false, "lastName" -> 1)
+    Json.fromJson[Player](json) match {
+      case JsSuccess(_, _) => fail("Somehow the broken json was parsed correctly")
+      case JsError(e) =>
+        val errorResponse = GenericResponse.fromJsonErrors(e)
+        errorResponse should equal(GenericResponse(success = false, None, Some(Seq(
+          "/email - error.path.missing",
+          "/firstName - error.expected.jsstring",
+          "/lastName - error.expected.jsstring"
+        ))))
+    }
   }
 }

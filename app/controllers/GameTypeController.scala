@@ -32,7 +32,7 @@ class GameTypeController extends Controller with AccessControl {
           Ok(Json.toJson(Await.result(GameTypesDao.addGameType(gameType), 5.seconds))).as("application/json")
         case JsError(e) =>
           Logger.error("Invalid Post Body for addGameType: " + e)
-          BadRequest(Json.toJson(GenericResponse(success = false, None, Some(e.map(_.toString()))))).as("application/json)")
+          BadRequest(Json.toJson(GenericResponse.fromJsonErrors(e))).as("application/json)")
       }
     }
   }

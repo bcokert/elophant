@@ -75,6 +75,13 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     }
   }
 
+  it should "fail if you don't have the necessary permissions" in {
+    setAppPermissions(Map(PermissionTypes.GAME_TYPE -> PermissionLevels.NONE))
+    testRequestAndVerify(GET, "/gameType/", expectedResponseCode = FORBIDDEN) {
+      Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.GAME_TYPE, PermissionLevels.NONE, PermissionLevels.READ)))
+    }
+  }
+
   "POST /gameType/" should "create a new gameType" in {
     setAppPermissions(Map(PermissionTypes.GAME_TYPE -> PermissionLevels.CREATE))
     val data = Json.obj(
@@ -93,6 +100,35 @@ class SharedIntegrationTest extends BaseIntegrationTest {
 
       (res.head \ "name").get should equal(JsString("foosball"))
       (res.head \ "description").get should equal(JsString("that one with the red balls"))
+    }
+  }
+
+  it should "fail if you don't have the necessary permissions" in {
+    setAppPermissions(Map(PermissionTypes.GAME_TYPE -> PermissionLevels.READ))
+    val data = Json.obj(
+      "name" -> "foosball",
+      "description" -> "that one with the red balls"
+    )
+
+    testRequestWithJsonAndVerify(POST, "/gameType/", data, expectedResponseCode = FORBIDDEN) {
+      Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.GAME_TYPE, PermissionLevels.READ, PermissionLevels.CREATE)))
+    }
+  }
+
+  it should "return a readable failure response when given bad json" in {
+    setAppPermissions(Map(PermissionTypes.GAME_TYPE -> PermissionLevels.CREATE))
+    val data = Json.obj(
+      "description" -> 1
+    )
+
+    testRequestWithJsonAndVerify(POST, "/gameType/", data, expectedResponseCode = BAD_REQUEST) {
+      Json.obj(
+        "success" -> false,
+        "errorReasons" -> Json.arr(
+          "/description - error.expected.jsstring",
+          "/name - error.path.missing"
+        )
+      )
     }
   }
 
@@ -124,6 +160,13 @@ class SharedIntegrationTest extends BaseIntegrationTest {
           )
         )
       }
+    }
+  }
+
+  it should "fail if you don't have the necessary permissions" in {
+    setAppPermissions(Map(PermissionTypes.GAME_TYPE -> PermissionLevels.UPDATE))
+    testRequestAndVerify(DELETE, "/gameType/42", expectedResponseCode = FORBIDDEN) {
+      Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.GAME_TYPE, PermissionLevels.UPDATE, PermissionLevels.DELETE)))
     }
   }
 
@@ -213,6 +256,24 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       (res.head \ "firstName").get should equal(JsString("johnny"))
       (res.head \ "lastName").get should equal(JsString("pinkerton"))
       (res.head \ "email").get should equal(JsString("john.pinkerton@work.com"))
+    }
+  }
+
+  it should "return a readable failure response when given bad json" in {
+    setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.CREATE))
+    val data = Json.obj(
+      "firstName" -> "johnny",
+      "email" -> 14
+    )
+
+    testRequestWithJsonAndVerify(POST, "/player/", data, defaultHeaders, BAD_REQUEST) {
+      Json.obj(
+        "success" -> false,
+        "errorReasons" -> Json.arr(
+          "/email - error.expected.jsstring",
+          "/lastName - error.path.missing"
+        )
+      )
     }
   }
 
@@ -431,6 +492,25 @@ class SharedIntegrationTest extends BaseIntegrationTest {
           case JsError(e) => fail("Was not able to parse response\n" + e)
         }
       }
+    }
+  }
+
+  it should "return a readable failure response when given bad json" in {
+    setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.UPDATE))
+    val data = Json.obj(
+      "player1Id" -> 1,
+      "score" -> "1"
+    )
+
+    testRequestWithJsonAndVerify(POST, "/gameResult/", data, defaultHeaders, BAD_REQUEST) {
+      Json.obj(
+        "success" -> false,
+        "errorReasons" -> Json.arr(
+          "/gameTypeId - error.path.missing",
+          "/player2Id - error.path.missing",
+          "/score - error.expected.jsnumber"
+        )
+      )
     }
   }
 
