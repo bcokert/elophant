@@ -19,7 +19,7 @@ trait AccessControl extends Controller {
   case class AccessControlledAction[A](minimumAccessRequirements: Map[PermissionType, PermissionLevel])(action: Action[A]) extends Action[A] {
     def apply(request: Request[A]): Future[Result] = {
       val authToken = request.headers.get("Auth-Token").getOrElse("No Token Provided")
-      Logger.info(s"ACCESS CONTROL: [$authToken] wants to access ${request.method} ${request.path}, which has minimum permissions $minimumAccessRequirements")
+      Logger.debug(s"ACCESS CONTROL: [$authToken] wants to access ${request.method} ${request.path}, which has minimum permissions $minimumAccessRequirements")
 
       request.headers.get("Auth-Token") match {
         case None =>
@@ -39,7 +39,7 @@ trait AccessControl extends Controller {
 
           inadequatePermissionsFuture.flatMap { inadequatePermissions =>
             if (inadequatePermissions.isEmpty) {
-              Logger.info(s"ACCESS CONTROL: [$authToken] was authorized to access ${request.method} ${request.path}, which has minimum permissions $minimumAccessRequirements")
+              Logger.debug(s"ACCESS CONTROL: [$authToken] was authorized to access ${request.method} ${request.path}, which has minimum permissions $minimumAccessRequirements")
               action(request)
             } else {
               Logger.warn(s"ACCESS CONTROL: [$authToken] tried to access ${request.method} ${request.path}, but is missing permissions: $inadequatePermissions")

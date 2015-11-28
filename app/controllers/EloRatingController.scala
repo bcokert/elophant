@@ -9,21 +9,20 @@ import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
 import types.{PermissionLevels, PermissionTypes}
-
-import scala.concurrent.Await
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class EloRatingController extends Controller with AccessControl {
+class EloRatingController extends BaseController with AccessControl {
 
   def getEloRatings(maybePlayerId: Option[Int], maybeGameTypeId: Option[Int]) = AccessControlledAction(Map(PermissionTypes.RATING -> PermissionLevels.READ)) {
     Action { request =>
       Logger.info(s"REQUEST: ${request.method} ${request.path} ${request.body}")
       (maybePlayerId, maybeGameTypeId) match {
-        case (Some(playerId), Some(gameTypeId)) => Ok(Json.toJson(Await.result(EloRatingsDao.getRating(playerId, gameTypeId), 5.seconds))).as("application/json")
-        case (Some(playerId), None) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatingsByPlayerId(playerId), 5.seconds))).as("application/json")
-        case (None, Some(gameTypeId)) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatingsByGameTypeId(gameTypeId), 5.seconds))).as("application/json")
-        case (None, None) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatings, 5.seconds))).as("application/json")
+        case (Some(playerId), Some(gameTypeId)) => ResultWithJson(EloRatingsDao.getRating(playerId, gameTypeId), Ok)
+        case (Some(playerId), None) => ResultWithJson(EloRatingsDao.getRatingsByPlayerId(playerId), Ok)
+        case (None, Some(gameTypeId)) => ResultWithJson(EloRatingsDao.getRatingsByGameTypeId(gameTypeId), Ok)
+        case (None, None) => ResultWithJson(EloRatingsDao.getRatings, Ok)
       }
     }
   }
@@ -61,14 +60,13 @@ class EloRatingController extends Controller with AccessControl {
           } yield (elo1WasUpdated, elo2WasUpdated)
 
           Await.result(updates, 5.seconds) match {
-            case (1, 1) => Ok(Json.toJson(GenericResponse(success = true))).as("application/json)")
-            case (0, 1) => BadRequest(Json.toJson(GenericResponse(success = false, None, Some(Seq(s"Rating for Player '$player1Id' and Game Type '$gameTypeId' does not exist"))))).as("application/json)")
-            case (1, 0) => BadRequest(Json.toJson(GenericResponse(success = false, None, Some(Seq(s"Rating for Player '$player2Id' and Game Type '$gameTypeId' does not exist"))))).as("application/json)")
-            case (0, 0) => BadRequest(Json.toJson(GenericResponse(success = false, None, Some(Seq(player1Id, player2Id).map(id => s"Rating for Player '$id' and Game Type '$gameTypeId' does not exist"))))).as("application/json)")
+            case (1, 1) => ResultWithJson(GenericResponse(success = true), Ok)
+            case (0, 1) => ErrorWithJson(GenericResponse(success = false, None, Some(Seq(s"Rating for Player '$player1Id' and Game Type '$gameTypeId' does not exist"))), BadRequest, "Unable to update rating")
+            case (1, 0) => ErrorWithJson(GenericResponse(success = false, None, Some(Seq(s"Rating for Player '$player2Id' and Game Type '$gameTypeId' does not exist"))), BadRequest, "Unable to update rating")
+            case (0, 0) => ErrorWithJson(GenericResponse(success = false, None, Some(Seq(player1Id, player2Id).map(id => s"Rating for Player '$id' and Game Type '$gameTypeId' does not exist"))), BadRequest, "Unable to update rating")
           }
         case JsError(e) =>
-          Logger.error("Invalid Post Body for addGameResult: " + e)
-          BadRequest(Json.toJson(GenericResponse.fromJsonErrors(e))).as("application/json)")
+          ErrorWithJson(GenericResponse.fromJsonErrors(e), BadRequest, "Invalid Post Body for addGameResult")
       }
     }
   }

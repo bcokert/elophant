@@ -7,23 +7,21 @@ import play.api.Logger
 import play.api.libs.json._
 import dao.PlayersDao
 import types.{PermissionLevels, PermissionTypes}
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
-class PlayerController extends Controller with AccessControl {
+class PlayerController extends BaseController with AccessControl {
 
   def getPlayer(id: Int) = AccessControlledAction(Map(PermissionTypes.PLAYER -> PermissionLevels.READ)) {
     Action { request =>
       Logger.info(s"REQUEST: ${request.method} ${request.path} ${request.body}")
-      Ok(Json.toJson(Await.result(PlayersDao.getPlayer(id), 5.seconds))).as("application/json")
+      ResultWithJson(PlayersDao.getPlayer(id), Ok)
     }
   }
 
   def getPlayers = AccessControlledAction(Map(PermissionTypes.PLAYER -> PermissionLevels.READ)) {
     Action { request =>
       Logger.info(s"REQUEST: ${request.method} ${request.path} ${request.body}")
-      Ok(Json.toJson(Await.result(PlayersDao.getPlayers, 5.seconds).map(Json.toJson(_)))).as("application/json")
+      ResultWithJson(PlayersDao.getPlayers, Ok)
     }
   }
 
@@ -32,10 +30,9 @@ class PlayerController extends Controller with AccessControl {
       Logger.info(s"REQUEST: ${request.method} ${request.path} ${request.body}")
       Json.fromJson[Player](request.body) match {
         case JsSuccess(p: Player, _) =>
-          Ok(Json.toJson(Await.result(PlayersDao.addPlayer(p), 5.seconds))).as("application/json")
+          ResultWithJson(PlayersDao.addPlayer(p), Ok)
         case JsError(e) =>
-          Logger.error("Invalid Post Body for addPlayer: " + e)
-          BadRequest(Json.toJson(GenericResponse.fromJsonErrors(e))).as("application/json)")
+          ErrorWithJson(GenericResponse.fromJsonErrors(e), BadRequest, "Invalid Post Body for addPlayer")
       }
     }
   }
@@ -43,10 +40,11 @@ class PlayerController extends Controller with AccessControl {
   def deletePlayer(id: Int) = AccessControlledAction(Map(PermissionTypes.PLAYER -> PermissionLevels.DELETE)) {
     Action { request =>
       Logger.info(s"REQUEST: ${request.method} ${request.path} ${request.body}")
-      Ok(Json.toJson(Await.result(PlayersDao.deletePlayer(id), 5.seconds) match {
+      val response = PlayersDao.deletePlayer(id).map {
         case 1 => GenericResponse(success = true)
         case 0 => GenericResponse(success = false, None, Some(Seq(s"Player with id '$id' does not exist")))
-      })).as("application/json")
+      }
+      ResultWithJson(response, Ok)
     }
   }
 }
