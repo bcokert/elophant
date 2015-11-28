@@ -23,7 +23,7 @@ trait AccessControl extends Controller {
 
       request.headers.get("Auth-Token") match {
         case None =>
-          Logger.info("ACCESS CONTROL: No auth token was provided")
+          Logger.warn("ACCESS CONTROL: No auth token was provided")
           Future.successful(Forbidden(Json.toJson(GenericResponse(success = false, None, Some(Seq("No auth token was provided. Please provide a valid auth token in the 'Auth-Token' http header"))))).as("application/json"))
 
         case Some(authToken: String) =>
@@ -38,9 +38,10 @@ trait AccessControl extends Controller {
             }
 
           inadequatePermissionsFuture.flatMap { inadequatePermissions =>
-            if (inadequatePermissions.isEmpty)
+            if (inadequatePermissions.isEmpty) {
+              Logger.info(s"ACCESS CONTROL: [$authToken] was authorized to access ${request.method} ${request.path}, which has minimum permissions $minimumAccessRequirements")
               action(request)
-            else {
+            } else {
               Logger.warn(s"ACCESS CONTROL: [$authToken] tried to access ${request.method} ${request.path}, but is missing permissions: $inadequatePermissions")
               val failureResponses = inadequatePermissions.map {
                 case InadequatePermissions(permType, current, minimum) => AccessControlFailureResponse(permType, current, minimum)

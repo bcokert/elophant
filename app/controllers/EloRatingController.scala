@@ -17,7 +17,8 @@ import scala.concurrent.duration._
 class EloRatingController extends Controller with AccessControl {
 
   def getEloRatings(maybePlayerId: Option[Int], maybeGameTypeId: Option[Int]) = AccessControlledAction(Map(PermissionTypes.RATING -> PermissionLevels.READ)) {
-    Action {
+    Action { request =>
+      Logger.info(s"REQUEST: ${request.method} ${request.path} ${request.body}")
       (maybePlayerId, maybeGameTypeId) match {
         case (Some(playerId), Some(gameTypeId)) => Ok(Json.toJson(Await.result(EloRatingsDao.getRating(playerId, gameTypeId), 5.seconds))).as("application/json")
         case (Some(playerId), None) => Ok(Json.toJson(Await.result(EloRatingsDao.getRatingsByPlayerId(playerId), 5.seconds))).as("application/json")
@@ -29,6 +30,7 @@ class EloRatingController extends Controller with AccessControl {
 
   def addGameResult() = AccessControlledAction(Map(PermissionTypes.RATING -> PermissionLevels.UPDATE)) {
     Action(parse.json) { request =>
+      Logger.info(s"REQUEST: ${request.method} ${request.path} ${request.body}")
       Json.fromJson[GameResult](request.body) match {
         case JsSuccess(g: GameResult, _) =>
           val (player1Id, player2Id, score, gameTypeId) = (
