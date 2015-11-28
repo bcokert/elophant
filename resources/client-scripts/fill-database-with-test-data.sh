@@ -8,11 +8,13 @@ INSERT INTO player(id, first_name, last_name, email) values(2, 'test2first', 'te
 INSERT INTO player(id, first_name, last_name, email) values(3, 'test3first', 'test3last', 'test3@test.com');
 INSERT INTO player(id, first_name, last_name, email) values(4, 'test4first', 'test4last', 'test4@test.com');
 INSERT INTO player(id, first_name, last_name, email) values(5, 'test5first', 'test5last', 'test5@test.com');
+SELECT setval('player_id_seq', 5);
 
 DELETE FROM game_type;
 INSERT INTO game_type(id, name, description) values(1, 'testGameType1', 'Test Game Type 1');
 INSERT INTO game_type(id, name, description) values(2, 'testGameType2', 'Test Game Type 2');
 INSERT INTO game_type(id, name, description) values(3, 'testGameType3', 'Test Game Type 3');
+SELECT setval('game_type_id_seq', 3);
 
 DELETE FROM rating;
 INSERT INTO rating(elo_rating, player_id, game_type_id) values(1100, 1, 1);
@@ -32,6 +34,7 @@ INSERT INTO rating(elo_rating, player_id, game_type_id) values(879, 5, 3);
 DELETE FROM app;
 INSERT INTO app(id, name, owner_name, description, auth_token) values(1, 'TestApp1', 'Owner1', 'Test App 1', 'e>gC<3mif5zV>2oMHpaihH<dPvFVq`FSLThtxOMUEo@lM`Y??<SXzs^SW/NsjVAY');
 INSERT INTO app(id, name, owner_name, description, auth_token) values(2, 'TestApp2', 'Owner2', 'Test App 2', '1ax?R=fJ?SgzWbC@RI9NLmA=HF_`BOmt;1@ZgxpqkT`S_^rk>CkYgZ?9[y;MkMxu');
+SELECT setval('app_id_seq', 2);
 
 DELETE FROM permission;
 INSERT INTO permission(permission_level, permission_type, app_id) values('READ', 'PLAYER', 1);
