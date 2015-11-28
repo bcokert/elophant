@@ -17,6 +17,8 @@ CREATE TABLE permission_type (
   PRIMARY KEY (type)
 );
 
+CREATE INDEX permission_type_index ON permission_type (type);
+
 CREATE TABLE permission (
   id SERIAL,
   permission_level permission_level NOT NULL,
@@ -38,3 +40,5 @@ DROP TABLE permission_type CASCADE;
 DROP TABLE auth_token CASCADE;
 
 DROP TYPE permission_level;
+
+DROP INDEX IF EXISTS permission_type_index CASCADE;
