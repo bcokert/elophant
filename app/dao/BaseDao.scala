@@ -14,10 +14,10 @@ trait BaseDao {
   private def sqlActionWithLogging[A, C <: Effect, E, D <: Table[E]](action: DBIOAction[A, NoStream, C], query: Query[D, E, Seq])(toSqlFn: Query[D, E, Seq] => String, loggingFn: A => String)
     (implicit db: JdbcBackend#DatabaseDef): Future[A] = {
     val id = Math.abs(Random.nextInt())
-    Logger.info("Executing SQL <" + id + ">: " + toSqlFn(query))
+    Logger.debug("Executing SQL <" + id + ">: " + toSqlFn(query))
     db.run(action).map {
       case res =>
-        Logger.info("Result of SQL <" + id + ">: " + loggingFn(res))
+        Logger.debug("Result of SQL <" + id + ">: " + loggingFn(res))
         res
     }
   }

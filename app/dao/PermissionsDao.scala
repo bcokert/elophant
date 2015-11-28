@@ -66,14 +66,10 @@ object PermissionsDao extends BaseDao {
     }
 
     val id = Math.abs(Random.nextInt())
-    Logger.info(s"Executing SQL <$id>: ${query.result.statements.head}")
-    val result = db.run(query.result).recover {
-      case (e: Throwable) =>
-        Logger.error(s"SQL join action error: \n$e")
-        throw e
-    }.map {
+    Logger.debug(s"Executing SQL <$id>: ${query.result.statements.head}")
+    val result = db.run(query.result).map {
       case res =>
-        Logger.info(s"Result of SQL <$id>: ${res.mkString(",")}")
+        Logger.debug(s"Result of SQL <$id>: ${res.mkString(",")}")
         res
     }
 

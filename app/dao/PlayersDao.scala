@@ -3,7 +3,6 @@ package dao
 import models.Player
 import play.api._
 import play.api.db.slick.DatabaseConfigProvider
-import play.api.Logger
 import slick.driver.JdbcProfile
 import slick.lifted.Tag
 import slick.driver.PostgresDriver.api._

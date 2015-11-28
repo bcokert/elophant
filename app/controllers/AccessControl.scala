@@ -1,6 +1,6 @@
 package controllers
 
-import dto.response.AccessControlFailureResponse
+import dto.response.{GenericResponse, AccessControlFailureResponse}
 import exception.AppNotFoundException
 import play.api.mvc._
 import play.api.Logger
@@ -24,10 +24,7 @@ trait AccessControl extends Controller {
       request.headers.get("Auth-Token") match {
         case None =>
           Logger.info("ACCESS CONTROL: No auth token was provided")
-          Future.successful(Forbidden(Json.toJson(Json.obj(
-            "success" -> false,
-            "reason" -> "No auth token was provided. Please provide a valid auth token in the 'Auth-Token' http header"
-          ))).as("application/json"))
+          Future.successful(Forbidden(Json.toJson(GenericResponse(success = false, None, Some(Seq("No auth token was provided. Please provide a valid auth token in the 'Auth-Token' http header"))))).as("application/json"))
 
         case Some(authToken: String) =>
           val inadequatePermissionsFuture = for {
@@ -53,10 +50,7 @@ trait AccessControl extends Controller {
           }.recoverWith {
             case (e: AppNotFoundException) =>
               Logger.info("ACCESS CONTROL: No app was found with the given auth token")
-              Future.successful(NotFound(Json.toJson(Json.obj(
-                "success" -> false,
-                "reason" -> "No app was found with that auth token. Please provide a valid auth token with the 'Auth-Token' http header"
-              ))).as("application/json"))
+              Future.successful(NotFound(Json.toJson(GenericResponse(success = false, None, Some(Seq("No app was found with that auth token. Please provide a valid auth token with the 'Auth-Token' http header"))))).as("application/json"))
           }
       }
     }
