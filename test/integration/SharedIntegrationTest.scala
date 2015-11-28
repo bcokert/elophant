@@ -1,10 +1,8 @@
 package integration
 
 import dto.response.AccessControlFailureResponse
-import models.{GameType, GameResult, EloRating}
 import play.api.libs.json._
 import play.api.test.Helpers._
-import play.api.Logger
 import slick.driver.PostgresDriver.api._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import slick.jdbc.JdbcBackend
@@ -58,19 +56,18 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       waitFor(db.run(sqlu"INSERT INTO game_type(id, name, description) VALUES(4, 'foosball', 'foosball description');"))
       waitFor(db.run(sqlu"INSERT INTO game_type(id, name, description) VALUES(5, 'chess', 'chess description');"))
 
-      testRequestAndVerify(GET, "/gameType") {
-        Json.arr(
-          Json.obj(
-            "id" -> 4,
-            "name" -> "foosball",
-            "description" -> "foosball description"
-          ),
-          Json.obj(
-            "id" -> 5,
-            "name" -> "chess",
-            "description" -> "chess description"
-          )
-        )
+      testRequestAndManuallyVerify(GET, "/gameType") { results =>
+        results.as[JsArray].value should contain(Json.obj(
+          "id" -> 4,
+          "name" -> "foosball",
+          "description" -> "foosball description"
+        ))
+
+        results.as[JsArray].value should contain(Json.obj(
+          "id" -> 5,
+          "name" -> "chess",
+          "description" -> "chess description"
+        ))
       }
     }
   }
@@ -210,21 +207,20 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(4, 'bob', 'smith', 'bob.smith@hotmail.com');"))
       waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(5, 'jim', 'thompson', 'jim@work.com');"))
 
-      testRequestAndVerify(GET, "/player") {
-        Json.arr(
-          Json.obj(
-            "id" -> 4,
-            "firstName" -> "bob",
-            "lastName" -> "smith",
-            "email" -> "bob.smith@hotmail.com"
-          ),
-          Json.obj(
-            "id" -> 5,
-            "firstName" -> "jim",
-            "lastName" -> "thompson",
-            "email" -> "jim@work.com"
-          )
-        )
+      testRequestAndManuallyVerify(GET, "/player") { results =>
+        results.as[JsArray].value should contain(Json.obj(
+          "id" -> 4,
+          "firstName" -> "bob",
+          "lastName" -> "smith",
+          "email" -> "bob.smith@hotmail.com"
+        ))
+
+        results.as[JsArray].value should contain(Json.obj(
+          "id" -> 5,
+          "firstName" -> "jim",
+          "lastName" -> "thompson",
+          "email" -> "jim@work.com"
+        ))
       }
     }
   }
@@ -351,16 +347,31 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       setupRatingTests(db)
 
       testRequestAndManuallyVerify(GET, "/eloRating") { results =>
-        Json.fromJson[Seq[EloRating]](results) match {
-          case JsSuccess(ratings, _) =>
-            ratings.sortBy(r => r.rating) should equal(Seq(
-              EloRating(0, 1111, 1, 1),
-              EloRating(0, 1122, 1, 2),
-              EloRating(0, 2211, 2, 1),
-              EloRating(0, 2222, 2, 2)
-            ).sortBy(r => r.rating))
-          case JsError(e) => fail("Was not able to parse response\n" + e)
-        }
+        val jsResults = results.as[JsArray].value
+
+        jsResults should contain(Json.obj(
+          "rating" -> 1111,
+          "playerId" -> 1,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 1122,
+          "playerId" -> 1,
+          "gameTypeId" -> 2
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2211,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2222,
+          "playerId" -> 2,
+          "gameTypeId" -> 2
+        ))
       }
     }
   }
@@ -371,14 +382,19 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       setupRatingTests(db)
 
       testRequestAndManuallyVerify(GET, "/eloRating?playerId=2") { results =>
-        Json.fromJson[Seq[EloRating]](results) match {
-          case JsSuccess(ratings, _) =>
-            ratings.sortBy(r => r.rating) should equal(Seq(
-              EloRating(0, 2211, 2, 1),
-              EloRating(0, 2222, 2, 2)
-            ).sortBy(r => r.rating))
-          case JsError(e) => fail("Was not able to parse response\n" + e)
-        }
+        val jsResults = results.as[JsArray].value
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2211,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2222,
+          "playerId" -> 2,
+          "gameTypeId" -> 2
+        ))
       }
     }
   }
@@ -389,14 +405,19 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       setupRatingTests(db)
 
       testRequestAndManuallyVerify(GET, "/eloRating?gameTypeId=1") { results =>
-        Json.fromJson[Seq[EloRating]](results) match {
-          case JsSuccess(ratings, _) =>
-            ratings.sortBy(r => r.rating) should equal(Seq(
-              EloRating(0, 1111, 1, 1),
-              EloRating(0, 2211, 2, 1)
-            ).sortBy(r => r.rating))
-          case JsError(e) => fail("Was not able to parse response\n" + e)
-        }
+        val jsResults = results.as[JsArray].value
+
+        jsResults should contain(Json.obj(
+          "rating" -> 1111,
+          "playerId" -> 1,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2211,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        ))
       }
     }
   }
@@ -406,12 +427,12 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     withDatabase { db =>
       setupRatingTests(db)
 
-      testRequestAndManuallyVerify(GET, "/eloRating?playerId=2&gameTypeId=1") { results =>
-        Json.fromJson[EloRating](results) match {
-          case JsSuccess(rating, _) =>
-            rating should equal(EloRating(0, 2211, 2, 1))
-          case JsError(e) => fail("Was not able to parse response\n" + e)
-        }
+      testRequestAndVerify(GET, "/eloRating?playerId=2&gameTypeId=1") {
+        Json.obj(
+          "rating" -> 2211,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        )
       }
     }
   }
@@ -440,16 +461,31 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       }
 
       testRequestAndManuallyVerify(GET, "/eloRating") { results =>
-        Json.fromJson[Seq[EloRating]](results) match {
-          case JsSuccess(ratings, _) =>
-            ratings.sortBy(r => r.rating) should equal(Seq(
-              EloRating(0, 1127, 1, 1),
-              EloRating(0, 2195, 2, 1),
-              EloRating(0, 1122, 1, 2),
-              EloRating(0, 2222, 2, 2)
-            ).sortBy(r => r.rating))
-          case JsError(e) => fail("Was not able to parse response\n" + e)
-        }
+        val jsResults = results.as[JsArray].value
+
+        jsResults should contain(Json.obj(
+          "rating" -> 1127,
+          "playerId" -> 1,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 1122,
+          "playerId" -> 1,
+          "gameTypeId" -> 2
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2195,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2222,
+          "playerId" -> 2,
+          "gameTypeId" -> 2
+        ))
       }
 
       testRequestWithJsonAndVerify(POST, "/gameResult", gameResult) {
@@ -457,16 +493,31 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       }
 
       testRequestAndManuallyVerify(GET, "/eloRating") { results =>
-        Json.fromJson[Seq[EloRating]](results) match {
-          case JsSuccess(ratings, _) =>
-            ratings.sortBy(r => r.rating) should equal(Seq(
-              EloRating(0, 1143, 1, 1),
-              EloRating(0, 2179, 2, 1),
-              EloRating(0, 1122, 1, 2),
-              EloRating(0, 2222, 2, 2)
-            ).sortBy(r => r.rating))
-          case JsError(e) => fail("Was not able to parse response\n" + e)
-        }
+        val jsResults = results.as[JsArray].value
+
+        jsResults should contain(Json.obj(
+          "rating" -> 1143,
+          "playerId" -> 1,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 1122,
+          "playerId" -> 1,
+          "gameTypeId" -> 2
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2179,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2222,
+          "playerId" -> 2,
+          "gameTypeId" -> 2
+        ))
       }
 
       val gameResult2 = Json.obj(
@@ -481,16 +532,31 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       }
 
       testRequestAndManuallyVerify(GET, "/eloRating") { results =>
-        Json.fromJson[Seq[EloRating]](results) match {
-          case JsSuccess(ratings, _) =>
-            ratings.sortBy(r => r.rating) should equal(Seq(
-              EloRating(0, 1143, 1, 1),
-              EloRating(0, 2179, 2, 1),
-              EloRating(0, 1122, 1, 2),
-              EloRating(0, 2222, 2, 2)
-            ).sortBy(r => r.rating))
-          case JsError(e) => fail("Was not able to parse response\n" + e)
-        }
+        val jsResults = results.as[JsArray].value
+
+        jsResults should contain(Json.obj(
+          "rating" -> 1143,
+          "playerId" -> 1,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 1122,
+          "playerId" -> 1,
+          "gameTypeId" -> 2
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2179,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        ))
+
+        jsResults should contain(Json.obj(
+          "rating" -> 2222,
+          "playerId" -> 2,
+          "gameTypeId" -> 2
+        ))
       }
     }
   }
