@@ -45,9 +45,9 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     }
   }
 
-  "GET /gameType/" should "return an empty list when no gameTypes exist" in {
+  "GET /gameType" should "return an empty list when no gameTypes exist" in {
     setAppPermissions(Map(PermissionTypes.GAME_TYPE -> PermissionLevels.READ))
-    testRequestAndVerify(GET, "/gameType/") {
+    testRequestAndVerify(GET, "/gameType") {
       Json.arr()
     }
   }
@@ -58,7 +58,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       waitFor(db.run(sqlu"INSERT INTO game_type(id, name, description) VALUES(4, 'foosball', 'foosball description');"))
       waitFor(db.run(sqlu"INSERT INTO game_type(id, name, description) VALUES(5, 'chess', 'chess description');"))
 
-      testRequestAndVerify(GET, "/gameType/") {
+      testRequestAndVerify(GET, "/gameType") {
         Json.arr(
           Json.obj(
             "id" -> 4,
@@ -77,24 +77,24 @@ class SharedIntegrationTest extends BaseIntegrationTest {
 
   it should "fail if you don't have the necessary permissions" in {
     setAppPermissions(Map(PermissionTypes.GAME_TYPE -> PermissionLevels.NONE))
-    testRequestAndVerify(GET, "/gameType/", expectedResponseCode = FORBIDDEN) {
+    testRequestAndVerify(GET, "/gameType", expectedResponseCode = FORBIDDEN) {
       Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.GAME_TYPE, PermissionLevels.NONE, PermissionLevels.READ)))
     }
   }
 
-  "POST /gameType/" should "create a new gameType" in {
+  "POST /gameType" should "create a new gameType" in {
     setAppPermissions(Map(PermissionTypes.GAME_TYPE -> PermissionLevels.CREATE))
     val data = Json.obj(
       "name" -> "foosball",
       "description" -> "that one with the red balls"
     )
 
-    testRequestWithJsonAndManuallyVerify(POST, "/gameType/", data) { result =>
+    testRequestWithJsonAndManuallyVerify(POST, "/gameType", data) { result =>
       (result \ "name").get should equal(JsString("foosball"))
       (result \ "description").get should equal(JsString("that one with the red balls"))
     }
 
-    testRequestAndManuallyVerify(GET, "/gameType/") { results =>
+    testRequestAndManuallyVerify(GET, "/gameType") { results =>
       val res = results.as[JsArray].value
       res.size should equal(1)
 
@@ -110,7 +110,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       "description" -> "that one with the red balls"
     )
 
-    testRequestWithJsonAndVerify(POST, "/gameType/", data, expectedResponseCode = FORBIDDEN) {
+    testRequestWithJsonAndVerify(POST, "/gameType", data, expectedResponseCode = FORBIDDEN) {
       Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.GAME_TYPE, PermissionLevels.READ, PermissionLevels.CREATE)))
     }
   }
@@ -121,7 +121,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       "description" -> 1
     )
 
-    testRequestWithJsonAndVerify(POST, "/gameType/", data, expectedResponseCode = BAD_REQUEST) {
+    testRequestWithJsonAndVerify(POST, "/gameType", data, expectedResponseCode = BAD_REQUEST) {
       Json.obj(
         "success" -> false,
         "errorReasons" -> Json.arr(
@@ -143,7 +143,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
         )
       }
 
-      testRequestAndVerify(GET, "/gameType/") {
+      testRequestAndVerify(GET, "/gameType") {
         Json.arr()
       }
     }
@@ -197,9 +197,9 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     }
   }
 
-  "GET /player/" should "return an empty list when no players exist" in {
+  "GET /player" should "return an empty list when no players exist" in {
     setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.READ))
-    testRequestAndVerify(GET, "/player/") {
+    testRequestAndVerify(GET, "/player") {
       Json.arr()
     }
   }
@@ -210,7 +210,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(4, 'bob', 'smith', 'bob.smith@hotmail.com');"))
       waitFor(db.run(sqlu"INSERT INTO player(id, first_name, last_name, email) VALUES(5, 'jim', 'thompson', 'jim@work.com');"))
 
-      testRequestAndVerify(GET, "/player/") {
+      testRequestAndVerify(GET, "/player") {
         Json.arr(
           Json.obj(
             "id" -> 4,
@@ -231,25 +231,25 @@ class SharedIntegrationTest extends BaseIntegrationTest {
 
   it should "fail if you don't have the necessary permissions" in {
     setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.NONE))
-    testRequestAndVerify(GET, "/player/", expectedResponseCode = FORBIDDEN) {
+    testRequestAndVerify(GET, "/player", expectedResponseCode = FORBIDDEN) {
       Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.PLAYER, PermissionLevels.NONE, PermissionLevels.READ)))
     }
   }
 
-  "POST /player/" should "create a new player" in {
+  "POST /player" should "create a new player" in {
     setAppPermissions(Map(PermissionTypes.PLAYER -> PermissionLevels.CREATE))
     val data = Json.obj(
       "firstName" -> "johnny",
       "lastName" -> "pinkerton",
       "email" -> "john.pinkerton@work.com"
     )
-    testRequestWithJsonAndManuallyVerify(POST, "/player/", data) { result =>
+    testRequestWithJsonAndManuallyVerify(POST, "/player", data) { result =>
       (result \ "firstName").get should equal(JsString("johnny"))
       (result \ "lastName").get should equal(JsString("pinkerton"))
       (result \ "email").get should equal(JsString("john.pinkerton@work.com"))
     }
 
-    testRequestAndManuallyVerify(GET, "/player/") { results =>
+    testRequestAndManuallyVerify(GET, "/player") { results =>
       val res = results.as[JsArray].value
       res.size should equal(1)
 
@@ -266,7 +266,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       "email" -> 14
     )
 
-    testRequestWithJsonAndVerify(POST, "/player/", data, defaultHeaders, BAD_REQUEST) {
+    testRequestWithJsonAndVerify(POST, "/player", data, defaultHeaders, BAD_REQUEST) {
       Json.obj(
         "success" -> false,
         "errorReasons" -> Json.arr(
@@ -284,7 +284,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       "lastName" -> "pinkerton",
       "email" -> "john.pinkerton@work.com"
     )
-    testRequestWithJsonAndVerify(POST, "/player/", data, expectedResponseCode = FORBIDDEN) {
+    testRequestWithJsonAndVerify(POST, "/player", data, expectedResponseCode = FORBIDDEN) {
       Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.PLAYER, PermissionLevels.READ, PermissionLevels.CREATE)))
     }
   }
@@ -300,7 +300,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
         )
       }
 
-      testRequestAndVerify(GET, "/player/") {
+      testRequestAndVerify(GET, "/player") {
         Json.arr()
       }
     }
@@ -350,7 +350,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     withDatabase { db =>
       setupRatingTests(db)
 
-      testRequestAndManuallyVerify(GET, "/eloRating/") { results =>
+      testRequestAndManuallyVerify(GET, "/eloRating") { results =>
         Json.fromJson[Seq[EloRating]](results) match {
           case JsSuccess(ratings, _) =>
             ratings.sortBy(r => r.rating) should equal(Seq(
@@ -370,7 +370,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     withDatabase { db =>
       setupRatingTests(db)
 
-      testRequestAndManuallyVerify(GET, "/eloRating/?playerId=2") { results =>
+      testRequestAndManuallyVerify(GET, "/eloRating?playerId=2") { results =>
         Json.fromJson[Seq[EloRating]](results) match {
           case JsSuccess(ratings, _) =>
             ratings.sortBy(r => r.rating) should equal(Seq(
@@ -388,7 +388,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     withDatabase { db =>
       setupRatingTests(db)
 
-      testRequestAndManuallyVerify(GET, "/eloRating/?gameTypeId=1") { results =>
+      testRequestAndManuallyVerify(GET, "/eloRating?gameTypeId=1") { results =>
         Json.fromJson[Seq[EloRating]](results) match {
           case JsSuccess(ratings, _) =>
             ratings.sortBy(r => r.rating) should equal(Seq(
@@ -406,7 +406,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
     withDatabase { db =>
       setupRatingTests(db)
 
-      testRequestAndManuallyVerify(GET, "/eloRating/?playerId=2&gameTypeId=1") { results =>
+      testRequestAndManuallyVerify(GET, "/eloRating?playerId=2&gameTypeId=1") { results =>
         Json.fromJson[EloRating](results) match {
           case JsSuccess(rating, _) =>
             rating should equal(EloRating(0, 2211, 2, 1))
@@ -418,7 +418,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
 
   it should "fail if you don't have the necessary permissions" in {
     setAppPermissions(Map(PermissionTypes.RATING -> PermissionLevels.NONE))
-    testRequestAndVerify(GET, "/eloRating/", expectedResponseCode = FORBIDDEN) {
+    testRequestAndVerify(GET, "/eloRating", expectedResponseCode = FORBIDDEN) {
       Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.RATING, PermissionLevels.NONE, PermissionLevels.READ)))
     }
   }
@@ -435,11 +435,11 @@ class SharedIntegrationTest extends BaseIntegrationTest {
         "gameTypeId" -> 1
       )
 
-      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult) {
+      testRequestWithJsonAndVerify(POST, "/gameResult", gameResult) {
         Json.obj("success" -> true)
       }
 
-      testRequestAndManuallyVerify(GET, "/eloRating/") { results =>
+      testRequestAndManuallyVerify(GET, "/eloRating") { results =>
         Json.fromJson[Seq[EloRating]](results) match {
           case JsSuccess(ratings, _) =>
             ratings.sortBy(r => r.rating) should equal(Seq(
@@ -452,11 +452,11 @@ class SharedIntegrationTest extends BaseIntegrationTest {
         }
       }
 
-      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult) {
+      testRequestWithJsonAndVerify(POST, "/gameResult", gameResult) {
         Json.obj("success" -> true)
       }
 
-      testRequestAndManuallyVerify(GET, "/eloRating/") { results =>
+      testRequestAndManuallyVerify(GET, "/eloRating") { results =>
         Json.fromJson[Seq[EloRating]](results) match {
           case JsSuccess(ratings, _) =>
             ratings.sortBy(r => r.rating) should equal(Seq(
@@ -476,11 +476,11 @@ class SharedIntegrationTest extends BaseIntegrationTest {
         "gameTypeId" -> 1
       )
 
-      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult2) {
+      testRequestWithJsonAndVerify(POST, "/gameResult", gameResult2) {
         Json.obj("success" -> true)
       }
 
-      testRequestAndManuallyVerify(GET, "/eloRating/") { results =>
+      testRequestAndManuallyVerify(GET, "/eloRating") { results =>
         Json.fromJson[Seq[EloRating]](results) match {
           case JsSuccess(ratings, _) =>
             ratings.sortBy(r => r.rating) should equal(Seq(
@@ -502,7 +502,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       "score" -> "1"
     )
 
-    testRequestWithJsonAndVerify(POST, "/gameResult/", data, defaultHeaders, BAD_REQUEST) {
+    testRequestWithJsonAndVerify(POST, "/gameResult", data, defaultHeaders, BAD_REQUEST) {
       Json.obj(
         "success" -> false,
         "errorReasons" -> Json.arr(
@@ -524,7 +524,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       "gameTypeId" -> 1
     )
 
-    testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult2, expectedResponseCode = FORBIDDEN) {
+    testRequestWithJsonAndVerify(POST, "/gameResult", gameResult2, expectedResponseCode = FORBIDDEN) {
       Json.arr(Json.toJson(AccessControlFailureResponse(PermissionTypes.RATING, PermissionLevels.CREATE, PermissionLevels.UPDATE)))
     }
   }
@@ -541,7 +541,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
         "gameTypeId" -> 1
       )
 
-      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult, expectedResponseCode = BAD_REQUEST) {
+      testRequestWithJsonAndVerify(POST, "/gameResult", gameResult, expectedResponseCode = BAD_REQUEST) {
         Json.obj(
           "success" -> false,
           "errorReasons" -> Json.arr(
@@ -564,7 +564,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
         "gameTypeId" -> 1
       )
 
-      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult, expectedResponseCode = BAD_REQUEST) {
+      testRequestWithJsonAndVerify(POST, "/gameResult", gameResult, expectedResponseCode = BAD_REQUEST) {
         Json.obj(
           "success" -> false,
           "errorReasons" -> Json.arr(
@@ -587,7 +587,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
         "gameTypeId" -> 1
       )
 
-      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult, expectedResponseCode = BAD_REQUEST) {
+      testRequestWithJsonAndVerify(POST, "/gameResult", gameResult, expectedResponseCode = BAD_REQUEST) {
         Json.obj(
           "success" -> false,
           "errorReasons" -> Json.arr(
@@ -611,7 +611,7 @@ class SharedIntegrationTest extends BaseIntegrationTest {
         "gameTypeId" -> 9563
       )
 
-      testRequestWithJsonAndVerify(POST, "/gameResult/", gameResult, expectedResponseCode = BAD_REQUEST) {
+      testRequestWithJsonAndVerify(POST, "/gameResult", gameResult, expectedResponseCode = BAD_REQUEST) {
         Json.obj(
           "success" -> false,
           "errorReasons" -> Json.arr(

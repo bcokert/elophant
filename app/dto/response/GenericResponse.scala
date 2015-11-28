@@ -2,7 +2,6 @@ package dto.response
 
 import play.api.data.validation.ValidationError
 import play.api.libs.json._
-import play.api.Logger
 
 case class GenericResponse(success: Boolean, errorCodes: Option[Seq[Int]] = None, errorReasons: Option[Seq[String]] = None)
 

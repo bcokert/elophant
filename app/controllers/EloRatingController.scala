@@ -3,14 +3,14 @@ package controllers
 import _root_.util.StandardEloCalculator
 import dao.EloRatingsDao
 import dto.response.GenericResponse
-import exception.{GameTypeNotFoundException, PlayerNotFoundException, UnknownPSQLException}
+import exception.{GameTypeNotFoundException, PlayerNotFoundException}
 import models.{GameResult, EloRating}
 import play.api.Logger
 import play.api.libs.json._
 import play.api.mvc._
 import types.{PermissionLevels, PermissionTypes}
 
-import scala.concurrent.{Future, Await}
+import scala.concurrent.Await
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import scala.concurrent.duration._
 

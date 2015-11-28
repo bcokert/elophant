@@ -2,24 +2,30 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+# UnTrail
+GET /*path/                         controllers.Application.untrail(path: String)
+POST /*path/                         controllers.Application.untrail(path: String)
+PUT /*path/                         controllers.Application.untrail(path: String)
+DELETE /*path/                         controllers.Application.untrail(path: String)
+
 # Home page
 GET     /                           controllers.Application.index
 
 # Players
-GET     /player/                    controllers.PlayerController.getPlayers
+GET     /player                    controllers.PlayerController.getPlayers
 GET     /player/:id                 controllers.PlayerController.getPlayer(id: Int)
-POST    /player/                    controllers.PlayerController.addPlayer()
+POST    /player                    controllers.PlayerController.addPlayer()
 DELETE  /player/:id                 controllers.PlayerController.deletePlayer(id: Int)
 
 # GameTypes
-GET     /gameType/                    controllers.GameTypeController.getGameTypes
+GET     /gameType                    controllers.GameTypeController.getGameTypes
 GET     /gameType/:id                 controllers.GameTypeController.getGameType(id: Int)
-POST    /gameType/                    controllers.GameTypeController.addGameType()
+POST    /gameType                    controllers.GameTypeController.addGameType()
 DELETE  /gameType/:id                 controllers.GameTypeController.deleteGameType(id: Int)
 
 # Ratings
-GET     /eloRating/                 controllers.EloRatingController.getEloRatings(playerId: Option[Int], gameTypeId: Option[Int])
-POST    /gameResult/                 controllers.EloRatingController.addGameResult()
+GET     /eloRating                 controllers.EloRatingController.getEloRatings(playerId: Option[Int], gameTypeId: Option[Int])
+POST    /gameResult                 controllers.EloRatingController.addGameResult()
 
 # Static Assets
 GET     /static/*file               controllers.Assets.at(path="/public", file)
