@@ -1,7 +1,7 @@
 # Elophant
 Elophant is a service that manages elo rankings across multiple games and players.
 
-# Table of Contents
+## Table of Contents
 1. [Description](#description)
 2. [Client Documentation](#client-documentation)
 3. [Server Documentation](#server-documentation)
@@ -67,6 +67,16 @@ Request URI's should not have a trailing slash. Any that do will be redirected t
 Be sure to configure your client to follow redirects if you are unable to enforce this.
 
 ### Endpoints
+All endpoints specify the url, query params, and if applicable, a valid request body.
+The response body shown is always that of a successful response.
+
+In the event of an error, all requests return an error response of the form:
+```json
+{
+    success: false,
+    errorReasons: ["Issue number 1", "Issue number 2"]
+}
+```
 
 #### Player
 
@@ -76,7 +86,7 @@ Retrieve all Players
 * Permission Level: READ
 
 Response Body:
-```
+```json
 [{
     id: 422,
     firstName: "Bob",
@@ -88,26 +98,165 @@ Response Body:
 ```
 
 ##### GET /player/{id: Int}
+Retrieve the player with the given id
+* Permission Type: PLAYER
+* Permission Level: READ
+
+Response Body:
+```json
+{
+    id: 422,
+    firstName: "Bob",
+    lastName: "Dylan",
+    email: "bob.dylan@website.com"
+}
+```
 
 ##### POST /player [json]
+Create the player with the given data
+* Permission Type: PLAYER
+* Permission Level: CREATE
+
+Request Body:
+```json
+{
+    firstName: "bob",
+    lastName: "dylan",
+    email: "test@test.com"
+}
+```
+
+Response Body:
+```json
+{
+    id: 422,
+    firstName: "bob",
+    lastName: "dylan",
+    email: "test@test.com"
+}
+```
 
 ##### DELETE /player/{id: Int}
+Delete the player with the given id
+* Permission Type: PLAYER
+* Permission Level: DELETE
+
+Response Body:
+```json
+{
+    success: true
+}
+```
 
 #### Game Type
 
 ##### GET /gameType
+Retrieve All GameTypes
+* Permission Type: GAME_TYPE
+* Permission Level: READ
+
+Response Body:
+```json
+[{
+    id: 3,
+    name: "Foosball",
+    description: "The one with the balls"
+}, {
+    ...
+}]
+```
 
 ##### GET /gameType/{id: Int}
+Retrieve the gameType with the given id
+* Permission Type: GAME_TYPE
+* Permission Level: READ
+
+Response Body:
+```json
+{
+    id: 4,
+    name: "Foosball",
+    description: "The one with the balls"
+}
+```
 
 ##### POST /gameType [json]
+Create the gameType with the given data
+* Permission Type: GAME_TYPE
+* Permission Level: CREATE
+
+Request Body:
+```json
+{
+    name: "Funball",
+    description: "The new one with the Fun balls!"
+}
+```
+
+Response Body:
+```json
+{
+    id: 5,
+    name: "Funball",
+    description: "The new one with the Fun balls!"
+}
+```
 
 ##### DELETE /gameType/{id: Int}
+Delete the gameType with the given id
+* Permission Type: GAME_TYPE
+* Permission Level: DELETE
+
+Response Body:
+```json
+{
+    success: true
+}
+```
 
 #### Rating
 
 ##### GET /eloRating?playerId=2&leagueId=4&gameTypeId=5
+Retrieve All GameTypes
+* Permission Type: RATING
+* Permission Level: READ
+
+Each query param is optional, and will further reduce the set of ratings returned.
+
+Response Body:
+```json
+[{
+    eloRating: 1155,
+    playerId: 66,
+    gameTypeId: 6
+}, {
+    ...
+}]
+```
 
 ##### POST /gameResult [json]
+Post the result of a game, which will update EloRatings
+* Permission Type: RATING
+* Permission Level: UPDATE
+
+Score should be between 0 and 1.
+
+Request Body:
+```json
+{
+    player1Id: 52,
+    player2Id: 21,
+    score: 1,
+    gameTypeId: 6
+}
+```
+
+Response Body:
+```json
+{
+    success: true
+}
+```
 
 ## Server Documentation
 When referring to environments, the following name scheme is used

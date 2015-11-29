@@ -8,9 +8,6 @@ POST /*path/                         controllers.Application.untrail(path: Strin
 PUT /*path/                         controllers.Application.untrail(path: String)
 DELETE /*path/                         controllers.Application.untrail(path: String)
 
-# Home page
-GET     /                           controllers.Application.index
-
 # Players
 GET     /player                    controllers.PlayerController.getPlayers
 GET     /player/:id                 controllers.PlayerController.getPlayer(id: Int)
