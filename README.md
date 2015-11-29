@@ -1,141 +1,162 @@
 # Elophant
-Elophant is a service that tracks and calculates elo rankings across various games, events, and users.
+Elophant is a service that manages elo rankings across multiple games and players.
 
-Elo is a ranking system for competitive situations between 2 entities, usually players.
-All you need is a system that distributes 1 point amongst the two players. For example, the winner could get 1 point, and the loser the remaining 0.
-A draw might give both players 0.5 points. Or perhaps player 1 took 7 of the 10 available victory points, and so gets 0.7 of the win, leaving 0.3 for the other player.
-So long as the total is 1, elo can calculate each players skill level over time.
+# Table of Contents
+1. [Description](#description)
+2. [Client Documentation](#client-documentation)
+3. [Server Documentation](#server-documentation)
 
-All you have to do is tell it who was playing, and who got what points, and it does the rest.
+## Description
 
-## Architecture
-There are 3 main environments that Elophant is setup for. Throughout the documentation they are:
-* Local: The local environment where you typically develop elophant
-* Dev: The dev environment that simulates production, and homes the database that the local environment uses
-* Production: The production environment
+### Elo Rankings
+Elo rankings are estimates of the skill of each player in a 2 player game.
+For every game, a score is determined between 0 and 1 - usually 1 if the first player won, 0 if they lost, and 0.5 for a draw.
+That score is used to update the rating of each player - the higher the score, the more the player goes up.
+Elo rankings are measured in points, and points are always taken from one player and given to another.
 
-All environments make use of a docker host, which runs the containers that represent every other piece of the architecture (except possible gateways).
-The environment machine runs docker (making it a docker host) or runs a VM that runs docker (making the VM the docker host).
-All code is build and packed into docker images, which are pushed to docker hub. These are then pulled and run on a docker host.
+### Updating a Ranking
+If the first player gets 1 point, the second gets 0. If the first gets 0, the second gets 1.
+If the first player gets 0.7, then there's 0.3 left for player two. The sum of the scores is always equal to 1.
+To simplify things, only the score of the first player is sent - the second players score is just 1 minus that.
 
-TODO: Provide a sketch of the setup on macs and on deploy hosts to make it easier to understand
-TODO: Add machines and ports to sketch
+Each player has an existing rating, and that can be used to calculate their expected score.
+This is the score that elo predicts would occur on average, assuming their rating is correct.
 
+The expected score for player A (the first player) is calculated via:
+```scala
+ExpectedA = 1 / (1 + Math.pow(10, (ratingB - ratingA)/curveScalingFactor))
+```
+Where curveScalingFactor is just a factor used for the logical curve, and is usually set to 400.
 
-## Installation, Setup, and Deployment
-This section deals with setting up each environment, as well as deploying to each one
+And just like the real score, the expected score for the second player is just 1 - ExpectedA.
+Once you have the expected score, you can calculate the change in playerA's rating, or the delta rating:
+```scala
+Math.round(kFactor * (score - getExpectedScore(ratingA, ratingB))).toInt
+```
+Where the kFactor is another scaling constant, and helps control how dynamic your delta's are - if you half the kFactor, you half the base value of a win.
+Usually you pick the kFactor depending on the frequency of games and the accuracy of your ratings - pro tournaments will use a smaler value than amateur ones.
 
-### Setting up a local environment
-Locally you can run an elophant server, and by default it will connect to the dev database.
+Finally, you just add the delta value to playerA's original rating, to get his new value.
+Similarly, you subtract the delta value from playerB's rating.
 
-#### Setup Environment Variables
-* Run resources/client-scripts/setup.sh
-* If using a gateway between the internet and your dev docker host, ensure it is forwarding port 19213 external to 5432 of the docker host
-* If not, manually change environment variable ELOPHANT_DB_PORT to 5432, and ELOPHANT_GATEWAY to the address of your docker host
+## Client Documentation
 
-#### Install local docker host
+TBD
+
+## Server Documentation
+When referring to environments, the following name scheme is used
+Local - the local dev machine
+Dev - the remote dev environment
+Prod - the remote production environment
+
+### Developers
+
+#### Setup
+Regardless of what you're doing, the following setup is required for developing
+
+##### Local Environment Variables
+You need to setup local environment variables for use when building images, and running local instances.
+Just run resources/client-scripts/setup.sh and it will walk you through the setup
+
+##### Install Local docker host
 To build and deploy, you need to run docker locally. Linux environments can be hosts themselves, and non-linux environments use a VM managed by a tool called docker-machine
 * OSX - http://docs.docker.com/mac/step_one/
-  * After installation, run resources/client-scripts/build-and-release-server.sh, which will guide you through setting up docker-machine
-  * To use docker, run docker-quickstart-terminal (first time setup), then run 'eval "$(docker-machine env default)"' in your terminal, then use 'docker' as per usual
+  * run docker-quickstart-terminal (first time setup)
+  * run 'eval "$(docker-machine env default)"' (enable using docker directly from terminal)
 * linux - curl -sSL https://get.docker.com/ | sh
   * Follow the steps it prints out to create a docker group and add your dev user to it
+  
+##### Forward Local Ports (OSX only)
+On OSX, your containers run inside a VM. You need to forward ports to the containers inside your VM in order to connect from the outside (eg: psql into a local database).
+* Open Virtual Box
+* Right click default, go to Settings, then Network, then click "Port Forwarding" on the NAT adapter
+* Add a new rule, leave the ip's blank, and set the internal and external ports to 5432 (for the database)
+* Repeat for any other ports you want to open (you don't need to open 9000, since you'll be running the server via activator, not docker)
 
-### Setting up a dev environment
-A dev environment (or any environment) for elophant is simply a docker host. You can likely configure the host however you want, but the following requirements must be met:
+#### Running a Local Server
+Locally you can run an elophant server, and by default it will connect to the dev database.
+```bash
+> ./activator run        # Run in dev mode, with nice handling of exceptions
+> ./activator testProd   # Run in prod mode, which acts exactly like production, but uses the local config file
+> ./activator stage      # Compile a deploy artifact that you can use to further test running in production (eg: creates log folder structure)
+```
 
-#### Basics
-* You need at least 1 account that has root access or sufficient sudo access
-* You'll likely need to setup an ssh server, user accounts, and a docker group
+#### Running a Local Database
+You can also setup a local version of the database. Just follow the Ops section for deploying a database, but on your local machine.
+Then modify your application.conf to point to the local database:
+```
+db.url: "jdbc:postgresql://localhost:5432/elophant"
+```
+
+### Ops
+
+#### Setup an Environment
+The setup for Dev and Prod (and other) environments is the same, save for different environment variable values.
+When relevant use "local" for Local "dev" for Dev, and "prod" for Production
+
+##### Setup Environment Variables
+For the local environment (devs only) see their relevant Environment variable section, which uses a script
+For all other environments, the following variables need to be set:
+* Set ELOPHANT_USER_PASSWORD - password for regular access
+* Set ELOPHANT_ADMIN_PASSWORD - password for admin access (only used to init database)
+* Set ELOPHANT_ENV - used to select the correct config file, found in application-$ENV.conf
+* Set ELOPHANT_SECRET - the play secret, should be generated via 'activator playGenerateSecret'
+
+##### Install Docker
 * Install docker 1.9.x via 'curl -sSL https://get.docker.com/ | sh'
+* It should prompt you to setup groups and users. You should add any users that can manage images to the docker group. 
 
-#### Configure ports
+##### Configure ports
 * Ensure port 9000 of the docker host is forwarded externally (this is the default port for the server)
-* Ensure port 5432 of the docker host is forwarded externally (this is used by the local server when it connects to the dev database)
+* Ensure port 5432 of the docker host is forwarded externally (this is used by local to connect to the dev database, and by psql for database maintenance)
 * All other ports are automatically configured between docker containers within the host
 
-#### Install deployment scripts
-* Copy all of the scripts in resources/server-scripts to the docker host, somewhere like /usr/local/bin. Ensure the docker group can run them
+##### Install deployment scripts
+* Copy all of the scripts in resources/server-scripts to the docker host, somewhere like /usr/local/bin. Ensure the docker group can run them.
 
-#### Setup Environment variables
-* Set ELOPHANT_USER_PASSWORD, which should be the same password as the user used for the database (see the database setup section below)
-* Set ELOPHANT_ENV=dev, which allows the server to choose configuration based on the environment (local, dev, production)
-* Set ELOPHANT_SECRET, which is the scala play secret. You can create one per environment via './activator playGenerateSecret'
+#### Maintenance
 
-#### Setup database for the first time
-* Normally you'll just deploy the service or db service, but the first time you setup you also need some additional setup
-* Locally, run resources/client-scripts/build-and-release-db.sh (or use an existing db image)
-* On the docker host, run /usr/local/bin/deploy-database.sh
-* On the docker host, run /usr/local/bin/first-setup-database.sh, and follow the instructions in the container it brings up
+##### Deploy Database
+* If the data volume is already setup, just run /usr/local/bin/deploy-database.sh
+* If not, it will prompt you to set it up, and provide the necessary instructions. This is a short manual process.
 
-#### Setup server
-* Once the database is setup, the server is trivial to run
-* Locally, run resources/client-scripts/build-and-release-server.sh (or use an existing server image)
-* On the docker host, run /usr/local/bin/deploy-server.sh
-* Test it by going to your exposed address on port 9000
+##### Deploy Server
+* Ensure a database is running first
+* Run /usr/local/bin/deploy-server.sh
 
-### Setting up a production environment
-Setting up a production environment is exactly the same as setting up the dev environment, just with different values.
-Ideally you'll also change the passwords, secrets, and user accounts used. The only essential different step is:
-
-#### Setup Environment variables
-* Set ELOPHANT_ENV=production
-
-
-## Development
-
-### Build and run the server
-By default the dev server will serve to localhost:9000
-```
-> ./activator clean compile run   # Runs the server locally in the current process
-> ./activator stage   # Creates an artifact in ./target/universal/stage/bin that you can run to simulate deploying the server locally
-```
-
-## Maintenance
-
-### Re-start/Re-deploy a server
-Typically each server has an associated client-script to build and release, and another server-script to deploy
-
-#### Web Server
-* Locally, run resources/client-scripts/build-and-release-server.sh (or use an existing server image)
-* On the docker host, run /usr/local/bin/deploy-server.sh
-
-#### Database Server
-* Locally, run resources/client-scripts/build-and-release-db.sh (or use an existing db image)
-* On the docker host, run /usr/local/bin/deploy-database.sh
-
-### View/Modify the database
-You can connect to the database just like any other client, using any tool. Usually it's easiest to use the basic
-postgres client:
+##### Manage a Database
+You can connect to the database using any tool. Usually it's easiest to use the basic postgres client:
 ```
 > psql postgresql://0.0.0.0:5432/elophant -U elophantuser
 ```
 Any changes made here will be seen in the next request by the server, since you are essential just another client
 
-### View server logs
-Since all servers are just containers that run a single process, they can print their logs to stdout
-TODO: Provide data containers to expose other system logs
-Connect to the docker host, then:
+##### View server logs
+All server containers print their logs to stdout, so you can view them with:
 ```
-> docker logs name_of_container
+> docker logs container_name
+```
+All servers also output rotated logs in the run directory:
+* /usr/local/lib/elophant-server/web/logs
+Which you can find by running
+```
+> docker inspect elophant_server_1
 ```
 
-### Debug a servers configuration
+##### Debug a servers configuration
 You can get most info by inspecting a container, and complete control by creating a copied instance of the container
 Connect to the docker host, then:
 ```
-> docker inspect name_of_container
+> docker inspect name_of_container | grep -A 8 \"Volumes\"
 ```
+This will also tell you where to find the database volume and the logs volume.
 To run a copied container, look at the last line of the deploy script for the server in /usr/local/bin.
-TODO: Make this easier via clone scripts
-Fill in the relevant environment variables, and replace '-d' with '-ti --rm', and add '/bin/bash' to the end.
-The arguments to -e are variables defined on the docker host, so no need to replace those
-For example:
+Replace '-d' with '-ti --rm', and add '/bin/bash' to the end.
 ```
 > docker run -ti --rm --link elophant_db_1:database -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} bcokert/elophant-server:latest /bin/bash
 ```
 
-### Undo killing the database
+#### Undo killing the database
 Oops! I killed the database server! Does that mean everything is broken?
 
 No! Elophant uses data containers to ensure the database is never accidentally removed. To actually remove it, you have to
@@ -144,14 +165,3 @@ No! Elophant uses data containers to ensure the database is never accidentally r
 * Pass in extra options to the destroy method telling it to remove the associated data (also would have to be manual, and docker would yell at you)
 
 To restore the database if you've removed the servers (even the data container) just run /usr/local/bin/deploy-database.sh on the docker host
-
-If you also passed in the extra option, then essentially you've just done a sudo rm -rf /. Congratulations!
-
-### Backup the database
-You can backup the database by just copying and archiving the data volume. The location of the volume can be found with docker inspect
-TODO: Make this easier by providing a script
-TODO: On the docker hosts, run a cron script that does this periodically
-
-## Usage
-For the most part using Elophant just means interacting with the rest interface. To work with the database, see the maintenance section and 'Setting up a dev environment' section.
-TODO: Provide a quickstart tutorial for the rest interface once it's made

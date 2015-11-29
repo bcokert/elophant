@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
-ELOPHANT_GATEWAY=174.1.53.209
-ELOPHANT_DB_PORT=19213
 ELOPHANT_ENV=local
-
-ERROR_TXT="\033[1m\033[41m\033[97mERROR:\033[0m"
 
 read -p "Do you want the config variables to be added to your bash profile? (y/n): " SHOULD_SAVE
 echo
@@ -13,11 +9,15 @@ if [ ${SHOULD_SAVE} = "y" ]; then
   fi
 
   if ! grep -q ELOPHANT_GATEWAY ~/.bash_profile; then
-    echo "export ELOPHANT_GATEWAY=${ELOPHANT_GATEWAY}" >> ~/.bash_profile
+    read -p "What is the dev ip address (if behind a gateway, enter that): " -s GATEWAY
+    echo
+    echo "export ELOPHANT_GATEWAY=${GATEWAY}" >> ~/.bash_profile
   fi
 
   if ! grep -q ELOPHANT_DB_PORT ~/.bash_profile; then
-    echo "export ELOPHANT_DB_PORT=${ELOPHANT_DB_PORT}" >> ~/.bash_profile
+    read -p "What is the dev database port (if behind a gateway, enter that): " -s DB_PORT
+    echo
+    echo "export ELOPHANT_DB_PORT=${DB_PORT}" >> ~/.bash_profile
   fi
 
   if ! grep -q ELOPHANT_USER_PASSWORD ~/.bash_profile; then

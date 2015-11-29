@@ -7,4 +7,6 @@ EXPOSE 9000
 
 COPY elophant-server elophant-server/
 
+VOLUME /usr/local/lib/elophant-server/web/logs
+
 CMD ["/usr/local/lib/elophant-server/bin/elophant", "-Dconfig.file=/usr/local/lib/elophant-server/conf/application-dev.conf"]
