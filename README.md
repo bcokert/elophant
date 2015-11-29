@@ -71,7 +71,7 @@ All endpoints specify the url, query params, and if applicable, a valid request 
 The response body shown is always that of a successful response.
 
 In the event of an error, all requests return an error response of the form:
-```json
+```
 {
     success: false,
     errorReasons: ["Issue number 1", "Issue number 2"]
@@ -86,7 +86,7 @@ Retrieve all Players
 * Permission Level: READ
 
 Response Body:
-```json
+```
 [{
     id: 422,
     firstName: "Bob",
@@ -103,7 +103,7 @@ Retrieve the player with the given id
 * Permission Level: READ
 
 Response Body:
-```json
+```
 {
     id: 422,
     firstName: "Bob",
@@ -118,7 +118,7 @@ Create the player with the given data
 * Permission Level: CREATE
 
 Request Body:
-```json
+```
 {
     firstName: "bob",
     lastName: "dylan",
@@ -127,7 +127,7 @@ Request Body:
 ```
 
 Response Body:
-```json
+```
 {
     id: 422,
     firstName: "bob",
@@ -142,7 +142,7 @@ Delete the player with the given id
 * Permission Level: DELETE
 
 Response Body:
-```json
+```
 {
     success: true
 }
@@ -156,7 +156,7 @@ Retrieve All GameTypes
 * Permission Level: READ
 
 Response Body:
-```json
+```
 [{
     id: 3,
     name: "Foosball",
@@ -172,7 +172,7 @@ Retrieve the gameType with the given id
 * Permission Level: READ
 
 Response Body:
-```json
+```
 {
     id: 4,
     name: "Foosball",
@@ -186,7 +186,7 @@ Create the gameType with the given data
 * Permission Level: CREATE
 
 Request Body:
-```json
+```
 {
     name: "Funball",
     description: "The new one with the Fun balls!"
@@ -194,7 +194,7 @@ Request Body:
 ```
 
 Response Body:
-```json
+```
 {
     id: 5,
     name: "Funball",
@@ -208,7 +208,7 @@ Delete the gameType with the given id
 * Permission Level: DELETE
 
 Response Body:
-```json
+```
 {
     success: true
 }
@@ -224,7 +224,7 @@ Retrieve All GameTypes
 Each query param is optional, and will further reduce the set of ratings returned.
 
 Response Body:
-```json
+```
 [{
     eloRating: 1155,
     playerId: 66,
@@ -242,7 +242,7 @@ Post the result of a game, which will update EloRatings
 Score should be between 0 and 1.
 
 Request Body:
-```json
+```
 {
     player1Id: 52,
     player2Id: 21,
@@ -252,7 +252,7 @@ Request Body:
 ```
 
 Response Body:
-```json
+```
 {
     success: true
 }
