@@ -41,7 +41,73 @@ Similarly, you subtract the delta value from playerB's rating.
 
 ## Client Documentation
 
-TBD
+### Access Control
+All requests must provide an Auth-Token associated with their app.
+This should be provided in the http header "Auth-Token":
+```bash
+curl -H "Auth-Token: 9afhds923haksdhkfjasdf89h23hjkashdf" -H "Content-Type: application/json" -X "POST" -d {"name": "foosball", "description": "The one with the balls"} localhost:9000/gameType
+```
+
+Each app has a set of access permissions associated with their auth token.
+Every permission has a Type, and a Level.
+
+The levels are NONE, READ, CREATE, UPDATE, and DELETE.
+Those to the right imply those to the left, so UPDATE also grants CREATE and READ.
+* NONE is the default permission, when none is otherwise found, and prevents most operations.
+* READ allows GET operations with no side effects.
+* CREATE allows operations that create new data but do not affect other data.
+* UPDATE allows operations that operate on existing data.
+* DELETE allows operations that can remove data.
+
+For every endpoint group (Player, GameType, Rating, etc.) there is a corresponding Permission Type.
+The minimum required Permission Level is listed alongside each endpoint.
+
+### Redirects
+Request URI's should not have a trailing slash. Any that do will be redirected to the version that does not have a slash.
+Be sure to configure your client to follow redirects if you are unable to enforce this.
+
+### Endpoints
+
+#### Player
+
+##### GET /player
+Retrieve all Players
+* Permission Type: PLAYER
+* Permission Level: READ
+
+Response Body:
+```
+[{
+    id: 422,
+    firstName: "Bob",
+    lastName: "Dylan",
+    email: "bob.dylan@website.com"
+}, {
+    ...
+}]
+```
+
+##### GET /player/{id: Int}
+
+##### POST /player [json]
+
+##### DELETE /player/{id: Int}
+
+#### Game Type
+
+##### GET /gameType
+
+##### GET /gameType/{id: Int}
+
+##### POST /gameType [json]
+
+##### DELETE /gameType/{id: Int}
+
+#### Rating
+
+##### GET /eloRating?playerId=2&leagueId=4&gameTypeId=5
+
+##### POST /gameResult [json]
 
 ## Server Documentation
 When referring to environments, the following name scheme is used
