@@ -28,7 +28,6 @@ echo "Connecting to Docker VM..."
 eval "$(docker-machine env default)"
 
 echo "Building Docker Image..."
-VERSIONED_BUILD=v$(grep -o 'version\s*:=.\+' $ROOT_DIR/build.sbt | grep -o '\d.\d.\d')
 LATEST_BUILD=latest
 docker build -t ${REPOSITORY}/${IMAGE}:${LATEST_BUILD} ${OUTPUT_DIR}
 docker images | grep ${IMAGE}
