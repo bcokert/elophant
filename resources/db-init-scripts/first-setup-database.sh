@@ -13,7 +13,7 @@ echo "Starting the server to run some commands..."
 /usr/lib/postgresql/9.4/bin/postgres &
 
 echo "Creating the base user and database..."
-psql -c "CREATE USER elophantuser WITH PASSWORD '${ELOPHANT_USER_PASS}'"
+psql -c "CREATE USER elophantuser WITH PASSWORD '${ELOPHANT_USER_PASSWORD}'"
 psql -c "CREATE DATABASE elophant OWNER elophantuser"
 
 EOSU
