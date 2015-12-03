@@ -457,7 +457,15 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       )
 
       testRequestWithJsonAndVerify(POST, "/gameResult", gameResult) {
-        Json.obj("success" -> true)
+        Json.arr(Json.obj(
+          "rating" -> 1127,
+          "playerId" -> 1,
+          "gameTypeId" -> 1
+        ), Json.obj(
+          "rating" -> 2195,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        ))
       }
 
       testRequestAndManuallyVerify(GET, "/eloRating") { results =>
@@ -489,7 +497,15 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       }
 
       testRequestWithJsonAndVerify(POST, "/gameResult", gameResult) {
-        Json.obj("success" -> true)
+        Json.arr(Json.obj(
+          "rating" -> 1143,
+          "playerId" -> 1,
+          "gameTypeId" -> 1
+        ), Json.obj(
+          "rating" -> 2179,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        ))
       }
 
       testRequestAndManuallyVerify(GET, "/eloRating") { results =>
@@ -528,7 +544,15 @@ class SharedIntegrationTest extends BaseIntegrationTest {
       )
 
       testRequestWithJsonAndVerify(POST, "/gameResult", gameResult2) {
-        Json.obj("success" -> true)
+        Json.arr(Json.obj(
+          "rating" -> 1143,
+          "playerId" -> 1,
+          "gameTypeId" -> 1
+        ), Json.obj(
+          "rating" -> 2179,
+          "playerId" -> 2,
+          "gameTypeId" -> 1
+        ))
       }
 
       testRequestAndManuallyVerify(GET, "/eloRating") { results =>

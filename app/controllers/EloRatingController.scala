@@ -39,10 +39,14 @@ class EloRatingController extends BaseController with AccessControl {
             g.gameTypeId)
 
           val futureRating1 = EloRatingsDao.getRating(player1Id, gameTypeId).map(r => (r.id, r.rating)).recover {
-            case e => Logger.info(s"No rating found for player $player1Id and game type $gameTypeId. Setting to 1000 by default"); (0, 1000)
+            case e =>
+              Logger.info(s"No rating found for player $player1Id and game type $gameTypeId. Setting to 1000 by default");
+              (0, 1000)
           }
           val futureRating2 = EloRatingsDao.getRating(player2Id, gameTypeId).map(r => (r.id, r.rating)).recover {
-            case e => Logger.info(s"No rating found for player $player2Id and game type $gameTypeId. Setting to 1000 by default"); (0, 1000)
+            case e =>
+              Logger.info(s"No rating found for player $player2Id and game type $gameTypeId. Setting to 1000 by default");
+              (0, 1000)
           }
 
           val updates = for {
@@ -60,7 +64,12 @@ class EloRatingController extends BaseController with AccessControl {
           } yield (elo1WasUpdated, elo2WasUpdated)
 
           Await.result(updates, 5.seconds) match {
-            case (1, 1) => ResultWithJson(GenericResponse(success = true), Ok)
+            case (1, 1) =>
+              val newRatingsFuture = for {
+                newRating1 <- EloRatingsDao.getRating(player1Id, gameTypeId)
+                newRating2 <- EloRatingsDao.getRating(player2Id, gameTypeId)
+              } yield Seq(newRating1, newRating2)
+              ResultWithJson(Await.result(newRatingsFuture, 5.seconds), Ok)
             case (0, 1) => ErrorWithJson(GenericResponse(success = false, None, Some(Seq(s"Rating for Player '$player1Id' and Game Type '$gameTypeId' does not exist"))), BadRequest, "Unable to update rating")
             case (1, 0) => ErrorWithJson(GenericResponse(success = false, None, Some(Seq(s"Rating for Player '$player2Id' and Game Type '$gameTypeId' does not exist"))), BadRequest, "Unable to update rating")
             case (0, 0) => ErrorWithJson(GenericResponse(success = false, None, Some(Seq(player1Id, player2Id).map(id => s"Rating for Player '$id' and Game Type '$gameTypeId' does not exist"))), BadRequest, "Unable to update rating")
