@@ -253,9 +253,15 @@ Request Body:
 
 Response Body:
 ```
-{
-    success: true
-}
+[{
+    eloRating: 1192,
+    playerId: 52,
+    gameTypeId: 6
+}, {
+    eloRating: 1177,
+    playerId: 21,
+    gameTypeId: 6
+}]
 ```
 
 ## Server Documentation
