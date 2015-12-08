@@ -41,8 +41,6 @@ else
 
   sleep 10
   echo "Data structure ready. Running initialization scripts..."
-  echo "The following scripts will be run: "
-  echo "$(grep elophant-scripts resources/db-init-scripts/main.sh)"
   docker run --rm --volumes-from ${VOLUME_CONTAINER_NAME} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} --name ${SETUP_CONTAINER_NAME} ${REPOSITORY}/${IMAGE}:${VERSION} /elophant-scripts/main.sh
 
   # Re-perform the  steps of this script, now that the database is fully ready
