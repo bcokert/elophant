@@ -13,8 +13,8 @@ PATCH=$(echo "${VERSION}" | cut -d '.' -f 3)
 
 echo "Previous Version: $MAJOR.$MINOR.$PATCH"
 
-if   [ $1 = "major" ]; then MAJOR=$((MAJOR+=1));
-elif [ $1 = "minor" ]; then MINOR=$((MINOR+=1));
+if   [ $1 = "major" ]; then MAJOR=$((MAJOR+=1)); MINOR=0; PATCH=0;
+elif [ $1 = "minor" ]; then MINOR=$((MINOR+=1)); PATCH=0;
 elif [ $1 = "patch" ]; then PATCH=$((PATCH+=1));
 fi
 
