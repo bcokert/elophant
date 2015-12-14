@@ -80,7 +80,7 @@ if which docker-machine | grep -q /*/docker-machine; then
 fi
 
 if ! docker network ls | grep -q ${ELOPHANT_NETWORK}; then
-  echo "The network must be running. Currently configured name is ${ELOPHANT_NETWORK}"; exit 1;
+  docker network create ${ELOPHANT_NETWORK}
 fi
 
 echo "Checking that you are logged in to docker hub..."
