@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-REPOSITORY=bcokert              # The dockerhub repository to pull from
-WEB_IMAGE=elophant-server           # The image for the container
+REPOSITORY=bcokert
+WEB_IMAGE=elophant-server
 DB_IMAGE=elophant-db
+CONSUL_IMAGE=elophant-consul
 
 ### USAGE
 function print_usage {
@@ -12,18 +13,27 @@ function print_usage {
   echo "  -h|--help            Display this help"
   echo "  --dry                Print out intentions, but do not take any actions"
   echo "  -d|--database        Deploy the database (will not wipe the data volume)"
+  echo "  -c|--consul          Whether to redeploy the consul servers"
   echo "  -S|--no-servers      Don't deploy the web servers"
   echo "  --prefix             The prefix for the names of each server container"
   echo "  -p|--port            The external port for the database, used for debugging"
   echo
   echo "Arguments:"
   echo "  num_servers          The number of servers to create"
+  echo
+  echo "Examples:"
+  echo "  Dry run of everything: 'deploy-servers -c -d --dry 4'"
+  echo "  5 Servers only:        'deploy-servers 5'"
+  echo "  Database only:         'deploy-servers -d -S'"
+  echo "  Consul servers only:   'deploy-servers -c -S'"
+  echo "  All:                   'deploy-servers -c -d 4'"
 }
 
 ### OPTIONS
 DRY_RUN=false
 INCLUDE_DATABASE=false
 INCLUDE_SERVERS=true
+INCLUDE_CONSUL=false
 SERVER_NAME_PREFIX=elophant_web
 DATABASE_NAME=elophant_db
 VOLUME_CONTAINER_NAME=elophant_data
@@ -36,6 +46,7 @@ case ${key} in
     --dry) DRY_RUN=true;;
     -p|--port) DATABASE_PORT=$2; shift;;
     -d|--database) INCLUDE_DATABASE=true;;
+    -c|--consul) INCLUDE_CONSUL=true;;
     -S|--no-servers) INCLUDE_SERVERS=false;;
     --prefix) SERVER_NAME_PREFIX=$2; shift;;
     -*) echo "Illegal Option: ${key}"; print_usage; exit 1;;
@@ -54,11 +65,12 @@ if [ ${INCLUDE_SERVERS} = true ]; then
   fi
 fi
 
-if [ ${INCLUDE_DATABASE} = false ] && [ ${INCLUDE_SERVERS} = false ]; then
-  echo "You must deploy either the database or servers or both"
-  echo "Both:           'deploy-servers -d 4'"
+if [ ${INCLUDE_DATABASE} = false ] && [ ${INCLUDE_SERVERS} = false ] && [ ${INCLUDE_CONSUL} = false ]; then
+  echo "You must deploy at least one of: servers, database, consul cluster"
   echo "Servers only:   'deploy-servers 4'"
   echo "Database only:  'deploy-servers -d -S'"
+  echo "Consul only:    'deploy-servers -c -S'"
+  echo "All:            'deploy-servers -c -d 4"
   exit 1
 fi
 
@@ -94,6 +106,59 @@ if ! docker info | grep -q Username; then
 else
   echo "Successfully logged in!"
 fi
+
+
+
+### CONSUL SERVERS
+if [ ${INCLUDE_CONSUL} = true ]; then\
+
+  echo "Deploying Consul Servers..."
+
+  echo "Pulling latest consul server image..."
+  if [ ${DRY_RUN} = false ]; then
+    docker pull ${REPOSITORY}/${CONSUL_IMAGE}
+  else
+    echo "Dry Run: 'docker pull ${REPOSITORY}/${CONSUL_IMAGE}'"
+  fi
+
+  echo "Cleaning up any existing containers..."
+  if docker ps -a | grep -q elophant_consul; then
+    if [ ${DRY_RUN} = false ]; then
+      docker rm -f $(docker ps -a | grep elophant_consul | cut -d ' ' -f1)
+    else
+      echo "Dry Run: 'docker rm -f docker rm -f $(docker ps -a | grep ${CONSUL_IMAGE} | cut -d ' ' -f1)'"
+    fi
+  else
+    echo "No existing consul service to remove"
+  fi
+
+  echo "Starting new consul server containers..."
+  if [ ${DRY_RUN} = false ]; then
+    for (( i=1; i<=5; i++ )); do
+      docker run -d --net=${ELOPHANT_NETWORK} -p 850${i}:8500 -e NETWORK=${ELOPHANT_NETWORK} -e CONSUL_NODE_NUMBER=${i} --name elophant_consul_${i} ${REPOSITORY}/${CONSUL_IMAGE} /usr/local/bin/consul-start.sh
+    done
+  else
+    for (( i=1; i<=5; i++ )); do
+      echo "Dry Run: docker run -d --net=${ELOPHANT_NETWORK} -p 850${i}:8500 -e NETWORK=${ELOPHANT_NETWORK} -e CONSUL_NODE_NUMBER=${i} --name elophant_consul_${i} ${REPOSITORY}/${CONSUL_IMAGE} /usr/local/bin/consul-start.sh"
+    done
+  fi
+
+  echo "Consul servers will start election after 5 seconds..."
+  if [ ${DRY_RUN} = false ]; then
+    sleep 5
+  fi
+
+  echo "Giving consul servers a few seconds to elect someone..."
+  if [ ${DRY_RUN} = false ]; then
+    sleep 5
+  fi
+
+  echo "  The ui is available on each server, under port 850X, where X is the server number"
+  echo "  Eg: http://docker.host.address:8502/  is the ui served by host 2"
+
+  echo "Finished deploying consul cluster!"
+fi
+
 
 
 ### DB SERVER
