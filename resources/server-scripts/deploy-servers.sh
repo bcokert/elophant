@@ -142,11 +142,11 @@ if [ ${INCLUDE_CONSUL} = true ]; then\
       echo "Dry Run: docker run -d --net=${ELOPHANT_NETWORK} -p 850${i}:8500 -e NETWORK=${ELOPHANT_NETWORK} -e CONSUL_NODE_NUMBER=${i} --name elophant_consul_${i} ${REPOSITORY}/${CONSUL_IMAGE} /usr/local/bin/consul-start.sh"
     done
   fi
-
-  echo "Consul servers will start election after 5 seconds..."
-  if [ ${DRY_RUN} = false ]; then
-    sleep 5
-  fi
+#
+#  echo "Consul servers will start election after 5 seconds..."
+#  if [ ${DRY_RUN} = false ]; then
+#    sleep 5
+#  fi
 
   echo "Giving consul servers a few seconds to elect someone..."
   if [ ${DRY_RUN} = false ]; then
