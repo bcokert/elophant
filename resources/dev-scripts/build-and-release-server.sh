@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../..
 RESOURCE_DIR=${ROOT_DIR}/resources
+CONSUL_CONFIG_DIR=${RESOURCE_DIR}/consul.d
+CONSUL_SCRIPTS_DIR=${RESOURCE_DIR}/consul-scripts
 BUILD_DIR=${RESOURCE_DIR}/build
 ARTIFACT_DIR=${ROOT_DIR}/target/universal
 ARTIFACT=elophant-*.zip
@@ -29,6 +31,8 @@ echo "Building project..."
 ${ROOT_DIR}/activator clean compile dist
 
 echo "Preparing build artifacts for docker imaging..."
+cp -r ${CONSUL_CONFIG_DIR} ${OUTPUT_DIR}
+cp ${CONSUL_SCRIPTS_DIR}/* ${OUTPUT_DIR}
 cp ${ARTIFACT_DIR}/${ARTIFACT} ${OUTPUT_DIR}
 cd ${OUTPUT_DIR}
 unzip ${ARTIFACT} > /dev/null

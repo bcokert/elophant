@@ -1,12 +1,35 @@
 FROM java:8-jdk
 MAINTAINER Brandon Okert
 
+# Consul
+RUN LAYER=consul \
+  && version=0.5.2 \
+  && apt-get install wget \
+  && wget --no-check-certificate https://releases.hashicorp.com/consul/0.5.2/consul_0.5.2_linux_amd64.zip \
+  && unzip -d /opt/consul/ consul_0.5.2_linux_amd64.zip \
+  && ln -s /opt/consul/consul /bin/consul \
+  && apt-get -y purge wget \
+  && apt-get -y autoremove \
+  && apt-get -y clean \
+  && mkdir -p /var/log/consul /data
+
+ENV GOMAXPROCS 2
+
+COPY consul.d /etc/consul.d/
+
+COPY consul-client-start.sh /usr/local/bin
+RUN chmod a+x /usr/local/bin/consul-client-start.sh
+
+VOLUME /data/consul
+VOLUME /var/log/consul
+
+EXPOSE 8300 8301 8301/udp 8302 8302/udp 8400 8500 8600 8600/udp
+
+
+
+
+# Server
 WORKDIR /usr/local/lib
-
 EXPOSE 9000
-
 COPY elophant-server elophant-server/
-
 VOLUME /usr/local/lib/elophant-server/web/logs
-
-CMD ["/usr/local/lib/elophant-server/bin/elophant", "-Dconfig.file=/usr/local/lib/elophant-server/conf/application-dev.conf"]

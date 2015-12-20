@@ -1,6 +1,32 @@
 FROM postgres:9.4
 MAINTAINER Brandon Okert
 
-# These are run AFTER the postgres db is setup
+# Consul
+RUN LAYER=consul \
+  && version=0.5.2 \
+  && apt-get update \
+  && apt-get install -y wget zip unzip \
+  && wget --no-check-certificate https://releases.hashicorp.com/consul/0.5.2/consul_0.5.2_linux_amd64.zip \
+  && unzip -d /opt/consul/ consul_0.5.2_linux_amd64.zip \
+  && ln -s /opt/consul/consul /bin/consul \
+  && apt-get -y purge wget zip unzip \
+  && apt-get -y autoremove \
+  && apt-get -y clean \
+  && mkdir -p /var/log/consul /data
+
+ENV GOMAXPROCS 2
+
+COPY consul.d /etc/consul.d/
+
+COPY consul-client-start.sh /usr/local/bin
+RUN chmod a+x /usr/local/bin/consul-client-start.sh
+
+VOLUME /data/consul
+VOLUME /var/log/consul
+
+EXPOSE 8300 8301 8301/udp 8302 8302/udp 8400 8500 8600 8600/udp
+
+
+# Database
 COPY db-init-scripts /elophant-scripts/
 RUN chmod 755 /elophant-scripts/*.sh

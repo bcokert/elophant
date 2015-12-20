@@ -135,18 +135,13 @@ if [ ${INCLUDE_CONSUL} = true ]; then\
   echo "Starting new consul server containers..."
   if [ ${DRY_RUN} = false ]; then
     for (( i=1; i<=5; i++ )); do
-      docker run -d --net=${ELOPHANT_NETWORK} -p 850${i}:8500 -e NETWORK=${ELOPHANT_NETWORK} -e CONSUL_NODE_NUMBER=${i} --name elophant_consul_${i} ${REPOSITORY}/${CONSUL_IMAGE} /usr/local/bin/consul-start.sh
+      docker run -d --net=${ELOPHANT_NETWORK} -p 850${i}:8500 -e NETWORK=${ELOPHANT_NETWORK} -e CONSUL_NODE_NUMBER=${i} --name elophant_consul_${i} ${REPOSITORY}/${CONSUL_IMAGE} /usr/local/bin/consul-server-start.sh
     done
   else
     for (( i=1; i<=5; i++ )); do
-      echo "Dry Run: docker run -d --net=${ELOPHANT_NETWORK} -p 850${i}:8500 -e NETWORK=${ELOPHANT_NETWORK} -e CONSUL_NODE_NUMBER=${i} --name elophant_consul_${i} ${REPOSITORY}/${CONSUL_IMAGE} /usr/local/bin/consul-start.sh"
+      echo "Dry Run: docker run -d --net=${ELOPHANT_NETWORK} -p 850${i}:8500 -e NETWORK=${ELOPHANT_NETWORK} -e CONSUL_NODE_NUMBER=${i} --name elophant_consul_${i} ${REPOSITORY}/${CONSUL_IMAGE} /usr/local/bin/consul-server-start.sh"
     done
   fi
-#
-#  echo "Consul servers will start election after 5 seconds..."
-#  if [ ${DRY_RUN} = false ]; then
-#    sleep 5
-#  fi
 
   echo "Giving consul servers a few seconds to elect someone..."
   if [ ${DRY_RUN} = false ]; then
@@ -180,9 +175,9 @@ if [ ${INCLUDE_DATABASE} = true ]; then
   if docker ps -a | grep -q ${VOLUME_CONTAINER_NAME}; then
     echo "Volume container already exists, just creating new database container..."
     if [ ${DRY_RUN} = false ]; then
-      docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE}
+      docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS="elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c "/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres"
     else
-      echo "Dry Run: 'docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE}'"
+      echo "Dry Run: 'docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS=\"elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5\" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c \"/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres\"'"
     fi
   else
     echo "Volume container not found. Need to create this before starting the database container..."
@@ -192,7 +187,7 @@ if [ ${INCLUDE_DATABASE} = true ]; then
       echo "Dry Run: 'docker create --name ${VOLUME_CONTAINER_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/true'"
     fi
 
-    echo "Volume created. Starting a database container to intialize data structure. This will take 10-15 seconds..."
+    echo "Volume created. Starting a database container to initialize data structure. This will take 10-15 seconds..."
     if [ ${DRY_RUN} = false ]; then
       docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE}
       sleep 10
@@ -210,10 +205,10 @@ if [ ${INCLUDE_DATABASE} = true ]; then
     # Re-perform the  steps of this script, now that the database is fully ready
     if [ ${DRY_RUN} = false ]; then
       docker rm -f ${DATABASE_NAME}
-      docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} -p ${DATABASE_PORT}:5432 --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE}
+      docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS="elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c "/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres"
     else
       echo "Dry Run: 'docker rm -f ${DATABASE_NAME}'"
-      echo "Dry Run: 'docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE}'"
+      echo "Dry Run: 'docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS=\"elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5\" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c \"/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres\"'"
     fi
   fi
 fi
@@ -252,11 +247,11 @@ if [ ${INCLUDE_SERVERS} = true ]; then
   echo "Starting new server containers..."
   if [ ${DRY_RUN} = false ]; then
     for (( i=1; i<=${NUM_SERVERS}; i++ )); do
-      docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE}
+      docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_NETWORK=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVERS="elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5" --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE} /bin/bash -c "/usr/local/bin/consul-client-start.sh & /usr/local/lib/elophant-server/bin/elophant -Dconfig.file=/usr/local/lib/elophant-server/conf/application-dev.conf"
     done
   else
     for (( i=1; i<=${NUM_SERVERS}; i++ )); do
-      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE}'"
+      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_NETWORK=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVERS=\"elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5\" --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE} /bin/bash -c \"/usr/local/bin/consul-client-start.sh & /usr/local/lib/elophant-server/bin/elophant -Dconfig.file=/usr/local/lib/elophant-server/conf/application-dev.conf\"'"
     done
   fi
 fi

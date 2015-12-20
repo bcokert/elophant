@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../..
 RESOURCE_DIR=${ROOT_DIR}/resources
+CONSUL_CONFIG_DIR=${RESOURCE_DIR}/consul.d
+CONSUL_SCRIPTS_DIR=${RESOURCE_DIR}/consul-scripts
 BUILD_DIR=${RESOURCE_DIR}/build
 SCRIPT_DIR=${RESOURCE_DIR}/db-init-scripts
 DOCKER_FILE_NAME=Dockerfile-db
@@ -15,6 +17,8 @@ rm -rf ${OUTPUT_DIR}
 mkdir ${OUTPUT_DIR}
 
 echo "Preparing build artifacts for docker imaging..."
+cp -r ${CONSUL_CONFIG_DIR} ${OUTPUT_DIR}
+cp ${CONSUL_SCRIPTS_DIR}/* ${OUTPUT_DIR}
 cp -r ${SCRIPT_DIR} ${OUTPUT_DIR}
 cp ${BUILD_DIR}/${DOCKER_FILE_NAME} ${OUTPUT_DIR}
 mv ${OUTPUT_DIR}/${DOCKER_FILE_NAME} ${OUTPUT_DIR}/Dockerfile

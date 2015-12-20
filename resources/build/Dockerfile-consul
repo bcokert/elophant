@@ -24,8 +24,8 @@ ENV GOMAXPROCS 2
 
 COPY consul.d /etc/consul.d/
 
-COPY consul-start.sh /usr/local/bin
-RUN chmod a+x /usr/local/bin/consul-start.sh
+COPY consul-server-start.sh /usr/local/bin
+RUN chmod a+x /usr/local/bin/consul-server-start.sh
 
 VOLUME /data/consul
 VOLUME /var/log/consul
