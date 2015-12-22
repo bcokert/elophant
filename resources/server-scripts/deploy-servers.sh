@@ -3,6 +3,7 @@ REPOSITORY=bcokert
 WEB_IMAGE=elophant-server
 DB_IMAGE=elophant-db
 CONSUL_IMAGE=elophant-consul
+HAPROXY_IMAGE=elophant-haproxy
 
 ### USAGE
 function print_usage {
@@ -14,6 +15,7 @@ function print_usage {
   echo "  --dry                Print out intentions, but do not take any actions"
   echo "  -d|--database        Deploy the database (will not wipe the data volume)"
   echo "  -c|--consul          Whether to redeploy the consul servers"
+  echo "  -l|--lb num          How many load balancers to deploy. Defaults to 0"
   echo "  -S|--no-servers      Don't deploy the web servers"
   echo "  --prefix             The prefix for the names of each server container"
   echo "  -p|--port            The external port for the database, used for debugging"
@@ -26,7 +28,8 @@ function print_usage {
   echo "  5 Servers only:        'deploy-servers 5'"
   echo "  Database only:         'deploy-servers -d -S'"
   echo "  Consul servers only:   'deploy-servers -c -S'"
-  echo "  All:                   'deploy-servers -c -d 4'"
+  echo "  Load Balancers only:   'deploy-servers -l -S'"
+  echo "  All:                   'deploy-servers -c -l 2 -d 4'"
 }
 
 ### OPTIONS
@@ -34,6 +37,7 @@ DRY_RUN=false
 INCLUDE_DATABASE=false
 INCLUDE_SERVERS=true
 INCLUDE_CONSUL=false
+INCLUDE_LOAD_BALANCERS=false
 SERVER_NAME_PREFIX=elophant_web
 DATABASE_NAME=elophant_db
 VOLUME_CONTAINER_NAME=elophant_data
@@ -47,6 +51,7 @@ case ${key} in
     -p|--port) DATABASE_PORT=$2; shift;;
     -d|--database) INCLUDE_DATABASE=true;;
     -c|--consul) INCLUDE_CONSUL=true;;
+    -l|--lb) INCLUDE_LOAD_BALANCERS=true; NUM_LOAD_BALANCERS=$2; shift;;
     -S|--no-servers) INCLUDE_SERVERS=false;;
     --prefix) SERVER_NAME_PREFIX=$2; shift;;
     -*) echo "Illegal Option: ${key}"; print_usage; exit 1;;
@@ -65,12 +70,19 @@ if [ ${INCLUDE_SERVERS} = true ]; then
   fi
 fi
 
-if [ ${INCLUDE_DATABASE} = false ] && [ ${INCLUDE_SERVERS} = false ] && [ ${INCLUDE_CONSUL} = false ]; then
+if [ ${INCLUDE_LOAD_BALANCERS} = true ]; then
+  if ! [[ ${NUM_LOAD_BALANCERS} =~ $reNumber ]]; then
+    echo "Argument to -l must be a number. Received: '${NUM_LOAD_BALANCERS}'"; print_usage; exit 1
+  fi
+fi
+
+if [ ${INCLUDE_DATABASE} = false ] && [ ${INCLUDE_SERVERS} = false ] && [ ${INCLUDE_CONSUL} = false ] && [ ${INCLUDE_LOAD_BALANCERS} = false ]; then
   echo "You must deploy at least one of: servers, database, consul cluster"
   echo "Servers only:   'deploy-servers 4'"
   echo "Database only:  'deploy-servers -d -S'"
   echo "Consul only:    'deploy-servers -c -S'"
-  echo "All:            'deploy-servers -c -d 4"
+  echo "Haproxy only:   'deploy-servers -l 2 -S'"
+  echo "All:            'deploy-servers -c -l 2 -d 4"
   exit 1
 fi
 
@@ -175,9 +187,9 @@ if [ ${INCLUDE_DATABASE} = true ]; then
   if docker ps -a | grep -q ${VOLUME_CONTAINER_NAME}; then
     echo "Volume container already exists, just creating new database container..."
     if [ ${DRY_RUN} = false ]; then
-      docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS="elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c "/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres"
+      docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS="elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5" -e CONSUL_SERVICE="elophant-db" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c "/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres"
     else
-      echo "Dry Run: 'docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS=\"elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5\" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c \"/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres\"'"
+      echo "Dry Run: 'docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS=\"elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5\" -e CONSUL_SERVICE=\"elophant-db\" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c \"/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres\"'"
     fi
   else
     echo "Volume container not found. Need to create this before starting the database container..."
@@ -205,11 +217,47 @@ if [ ${INCLUDE_DATABASE} = true ]; then
     # Re-perform the  steps of this script, now that the database is fully ready
     if [ ${DRY_RUN} = false ]; then
       docker rm -f ${DATABASE_NAME}
-      docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS="elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c "/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres"
+      docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS="elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5" -e CONSUL_SERVICE="elophant-db" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c "/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres"
     else
       echo "Dry Run: 'docker rm -f ${DATABASE_NAME}'"
-      echo "Dry Run: 'docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS=\"elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5\" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c \"/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres\"'"
+      echo "Dry Run: 'docker run -d --volumes-from ${VOLUME_CONTAINER_NAME} --net=${ELOPHANT_NETWORK} -e POSTGRES_PASSWORD=${ELOPHANT_ADMIN_PASSWORD} -e CONSUL_NODE_NAME=${DATABASE_NAME} -e CONSUL_SERVERS=\"elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5\" -e CONSUL_SERVICE=\"elophant-db\" --name ${DATABASE_NAME} ${REPOSITORY}/${DB_IMAGE} /bin/bash -c \"/usr/local/bin/consul-client-start.sh & /docker-entrypoint.sh postgres\"'"
     fi
+  fi
+fi
+
+
+
+### HA PROXY Servers
+if [ ${INCLUDE_LOAD_BALANCERS} = true ]; then
+  echo "Deploying Load Balancers..."
+
+  echo "Pulling latest load balancer image..."
+  if [ ${DRY_RUN} = false ]; then
+    docker pull ${REPOSITORY}/${HAPROXY_IMAGE}
+  else
+    echo "Dry Run: 'docker pull ${REPOSITORY}/${HAPROXY_IMAGE}'"
+  fi
+
+  echo "Cleaning up any existing containers..."
+  if docker ps -a | grep -q "elophant_haproxy"; then
+    if [ ${DRY_RUN} = false ]; then
+      docker rm -f $(docker ps -a | grep "elophant_haproxy" | cut -d ' ' -f1)
+    else
+      echo "Dry Run: 'docker rm -f docker rm -f $(docker ps -a | grep \"elophant_haproxy\" | cut -d ' ' -f1)'"
+    fi
+  else
+    echo "No existing load balancers to remove"
+  fi
+
+  echo "Starting new load balancer containers..."
+  if [ ${DRY_RUN} = false ]; then
+    for (( i=1; i<=${NUM_LOAD_BALANCERS}; i++ )); do
+      docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=elophant_haproxy_${i} -e CONSUL_SERVICE=elophant-haproxy --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE} consul-template -consul elophant_consul_1:8500 -config /etc/consul-template.d/elophant-haproxy/elophant-haproxy.cfg
+    done
+  else
+    for (( i=1; i<=${NUM_LOAD_BALANCERS}; i++ )); do
+      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=elophant_haproxy_${i} -e CONSUL_SERVICE=elophant-haproxy --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE} consul-template -consul elophant_consul_1:8500 -config /etc/consul-template.d/elophant-haproxy/elophant-haproxy.cfg'"
+    done
   fi
 fi
 
@@ -247,11 +295,14 @@ if [ ${INCLUDE_SERVERS} = true ]; then
   echo "Starting new server containers..."
   if [ ${DRY_RUN} = false ]; then
     for (( i=1; i<=${NUM_SERVERS}; i++ )); do
-      docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_NETWORK=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVERS="elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5" --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE} /bin/bash -c "/usr/local/bin/consul-client-start.sh & /usr/local/lib/elophant-server/bin/elophant -Dconfig.file=/usr/local/lib/elophant-server/conf/application-dev.conf"
+      docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_NETWORK=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVERS="elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5" -e CONSUL_SERVICE="elophant-web" --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE} /bin/bash -c "/usr/local/bin/consul-client-start.sh & /usr/local/lib/elophant-server/bin/elophant -Dconfig.file=/usr/local/lib/elophant-server/conf/application-dev.conf"
+      if [ ${i} -eq 1 ]; then
+        sleep 5 # Try to avoid case where 2 web servers simultaneously apply evolutions
+      fi
     done
   else
     for (( i=1; i<=${NUM_SERVERS}; i++ )); do
-      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_NETWORK=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVERS=\"elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5\" --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE} /bin/bash -c \"/usr/local/bin/consul-client-start.sh & /usr/local/lib/elophant-server/bin/elophant -Dconfig.file=/usr/local/lib/elophant-server/conf/application-dev.conf\"'"
+      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_NETWORK=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVERS=\"elophant_consul_1 elophant_consul_2 elophant_consul_3 elophant_consul_4 elophant_consul_5\" -e CONSUL_SERVICE=\"elophant-web\" --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE} /bin/bash -c \"/usr/local/bin/consul-client-start.sh & /usr/local/lib/elophant-server/bin/elophant -Dconfig.file=/usr/local/lib/elophant-server/conf/application-dev.conf\"'"
     done
   fi
 fi

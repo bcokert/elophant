@@ -1,0 +1,7 @@
+{
+  "service": {
+    "name": "elophant-web",
+    "tags": ["web"],
+    "port": 9000
+  }
+}

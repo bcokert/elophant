@@ -1,0 +1,7 @@
+{
+  "service": {
+    "name": "elophant-db",
+    "tags": ["db"],
+    "port": 5432
+  }
+}

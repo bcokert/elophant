@@ -1,0 +1,17 @@
+global
+    daemon
+    maxconn 256
+
+defaults
+    mode http
+    timeout connect 5000ms
+    timeout client 30000ms
+    timeout server 30000ms
+
+frontend http-in
+    bind *:80
+    default_backend webservers
+
+backend webservers
+    {{range service "elophant-web"}}
+    server {{.Node}} {{.Address}}:{{.Port}}{{end}}
