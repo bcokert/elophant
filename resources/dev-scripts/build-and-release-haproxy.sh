@@ -2,6 +2,7 @@
 ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../..
 RESOURCE_DIR=${ROOT_DIR}/resources
 CONSUL_TEMPLATE_CONFIG_DIR=${RESOURCE_DIR}/consul-template.d
+HAPROXY_SYSLOG_CONFIG_DIR=${RESOURCE_DIR}/syslog.d
 BUILD_DIR=${RESOURCE_DIR}/build
 DOCKER_FILE_NAME=Dockerfile-haproxy
 OUTPUT_DIR=${ROOT_DIR}/release-haproxy-tmp
@@ -25,6 +26,7 @@ mkdir ${OUTPUT_DIR}
 
 echo "Preparing build artifacts for docker imaging..."
 cp -r ${CONSUL_TEMPLATE_CONFIG_DIR} ${OUTPUT_DIR}
+cp -r ${HAPROXY_SYSLOG_CONFIG_DIR} ${OUTPUT_DIR}
 cp ${BUILD_DIR}/${DOCKER_FILE_NAME} ${OUTPUT_DIR}
 mv ${OUTPUT_DIR}/${DOCKER_FILE_NAME} ${OUTPUT_DIR}/Dockerfile
 

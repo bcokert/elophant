@@ -252,11 +252,11 @@ if [ ${INCLUDE_LOAD_BALANCERS} = true ]; then
   echo "Starting new load balancer containers..."
   if [ ${DRY_RUN} = false ]; then
     for (( i=1; i<=${NUM_LOAD_BALANCERS}; i++ )); do
-      docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=elophant_haproxy_${i} -e CONSUL_SERVICE=elophant-haproxy --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE} consul-template -consul elophant_consul_1:8500 -config /etc/consul-template.d/elophant-haproxy/elophant-haproxy.cfg
+      docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=elophant_haproxy_${i} -e CONSUL_SERVICE=elophant-haproxy --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE} /bin/bash -c "rsyslogd -f /etc/syslog.d/haproxy.conf & consul-template -consul elophant_consul_1:8500 -config /etc/consul-template.d/elophant-haproxy/elophant-haproxy.cfg"
     done
   else
     for (( i=1; i<=${NUM_LOAD_BALANCERS}; i++ )); do
-      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=elophant_haproxy_${i} -e CONSUL_SERVICE=elophant-haproxy --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE} consul-template -consul elophant_consul_1:8500 -config /etc/consul-template.d/elophant-haproxy/elophant-haproxy.cfg'"
+      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_NODE_NAME=elophant_haproxy_${i} -e CONSUL_SERVICE=elophant-haproxy --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE} /bin/bash -c \"rsyslogd -f /etc/syslog.d/haproxy.conf & consul-template -consul elophant_consul_1:8500 -config /etc/consul-template.d/elophant-haproxy/elophant-haproxy.cfg\"'"
     done
   fi
 fi

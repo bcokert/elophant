@@ -3,7 +3,7 @@ MAINTAINER Brandon Okert
 
 RUN LAYER=haproxy \
   && version=0.11.1 \
-  && apk --update add bash haproxy ca-certificates unzip wget \
+  && apk --update add bash haproxy ca-certificates unzip wget rsyslog \
   && cd /tmp \
   && wget -O consul-template.zip https://releases.hashicorp.com/consul-template/${version}/consul-template_${version}_linux_amd64.zip \
   && unzip consul-template.zip \
@@ -11,4 +11,7 @@ RUN LAYER=haproxy \
   && rm -rf consul-template.zip \
   && mkdir -p /etc/haproxy.d
 
+VOLUME /var/log/haproxy
+
 COPY consul-template.d /etc/consul-template.d/
+COPY syslog.d /etc/syslog.d/
