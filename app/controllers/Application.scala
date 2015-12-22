@@ -8,4 +8,9 @@ class Application extends Controller {
     Logger.info(s"REQUEST: ${request.method} ${request.path} ${request.body}")
     MovedPermanently("/" + path)
   }
+
+  def amiup() = Action { request =>
+    Logger.debug(s"Checking amiup")
+    Ok("1")
+  }
 }

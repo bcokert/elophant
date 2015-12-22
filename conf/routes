@@ -27,3 +27,6 @@ POST    /gameResult                 controllers.EloRatingController.addGameResul
 # Static Assets
 GET     /static/*file               controllers.Assets.at(path="/public", file)
 
+# Health and Status
+GET     /amiup                      controllers.Application.amiup()
+
