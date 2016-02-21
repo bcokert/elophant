@@ -1,14 +1,17 @@
 FROM java:8-jdk
 MAINTAINER Brandon Okert
 
-# Consul
-RUN LAYER=consul \
-  && version=0.5.2 \
-  && apt-get install wget \
-  && wget --no-check-certificate https://releases.hashicorp.com/consul/0.5.2/consul_0.5.2_linux_amd64.zip \
-  && unzip -d /opt/consul/ consul_0.5.2_linux_amd64.zip \
+### CONSUL DEBIAN ###########################################################
+
+ENV CONSUL_VERSION 0.6.3
+ENV CONSUL_SHA256 b0532c61fec4a4f6d130c893fd8954ec007a6ad93effbe283a39224ed237e250
+
+ADD https://releases.hashicorp.com/consul/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip /tmp/consul.zip
+RUN apt-get update \
+  && apt-get install -y wget zip unzip \
+  && unzip -d /opt/consul/ /tmp/consul.zip \
   && ln -s /opt/consul/consul /bin/consul \
-  && apt-get -y purge wget \
+  && apt-get -y purge wget zip unzip \
   && apt-get -y autoremove \
   && apt-get -y clean \
   && mkdir -p /var/log/consul /data
@@ -25,8 +28,7 @@ VOLUME /var/log/consul
 
 EXPOSE 8300 8301 8301/udp 8302 8302/udp 8400 8500 8600 8600/udp
 
-
-
+#############################################################################
 
 # Server
 WORKDIR /usr/local/lib

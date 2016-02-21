@@ -4,7 +4,7 @@
   "log_level": "INFO",
   "server": true,
   "client_addr": "0.0.0.0",
-  "ui_dir": "/ui",
+  "ui": true,
   "bootstrap_expect": 5,
   "disable_update_check": true
 }
