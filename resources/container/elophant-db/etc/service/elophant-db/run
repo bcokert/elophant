@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+exec 2>&1
+source /etc/envvars
+
+# Register service with consul agent
+read -r -d '' CONSUL_SERVICE_CONFIG <<- EOM
+{
+  "id": "${CONSUL_SERVICE_ADDRESS}",
+  "name": "${CONSUL_SERVICE_NAME}",
+  "address": "${CONSUL_SERVICE_ADDRESS}",
+  "port": ${CONSUL_SERVICE_PORT}
+}
+EOM
+curl -X PUT -H "content-type:application/json" --data "${CONSUL_SERVICE_CONFIG}" ${CONSUL_CLIENT_ADDRESS}/v1/agent/service/register
+
+exec /docker-entrypoint.sh postgres

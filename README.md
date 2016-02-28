@@ -358,10 +358,10 @@ All server containers print their logs to stdout, so you can view them with:
 > docker logs container_name
 ```
 All servers also output rotated logs in the run directory:
-* /usr/local/lib/elophant-server/web/logs
+* /usr/local/lib/elophant-web/web/logs
 Which you can find by running
 ```
-> docker inspect elophant_server_1
+> docker inspect elophant_web_1
 ```
 
 ##### Debug a servers configuration
@@ -374,7 +374,7 @@ This will also tell you where to find the database volume and the logs volume.
 To run a copied container, look at the last line of the deploy script for the server in /usr/local/bin.
 Replace '-d' with '-ti --rm', and add '/bin/bash' to the end.
 ```
-> docker run -ti --rm --link elophant_db_1:database -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} bcokert/elophant-server:latest /bin/bash
+> docker run -ti --rm --link elophant_db_1:database -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} bcokert/elophant-web:latest /bin/bash
 ```
 
 #### Undo killing the database

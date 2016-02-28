@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+exec 2>&1
+source /etc/envvars
+
+exec rsyslogd -n -i /var/run/rsyslog.pid -f /etc/rsyslog/haproxy.conf

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+mkdir -p /var/log/elophant-haproxy
+exec svlogd -tt /var/log/elophant-haproxy

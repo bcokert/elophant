@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+exec 2>&1
+source /etc/envvars
+consul agent -config-file /etc/consul.d/elophant_consul_client.json -node ${CONSUL_NODE_NAME} -retry-interval 5s -retry-join ${CONSUL_SERVERS}

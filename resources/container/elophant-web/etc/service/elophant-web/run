@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+exec 2>&1
+source /etc/envvars
+
+# Register service with consul agent
+curl -X PUT -H "content-type:application/json" --data "{\"id\": \"${CONSUL_SERVICE_ADDRESS}\",\"Name\": \"${CONSUL_SERVICE_NAME}\",\"address\": \"${CONSUL_SERVICE_ADDRESS}\",\"port\": ${CONSUL_SERVICE_PORT},\"check\": {\"name\": \"General amiup check on elophant-web servers\",\"http\": \"http://${CONSUL_SERVICE_ADDRESS}:9000/amiup\",\"interval\": \"15s\",\"timeout\": \"3s\"}}" ${CONSUL_CLIENT_ADDRESS}/v1/agent/service/register
+
+rm -f /usr/local/lib/elophant-web/RUNNING_PID
+exec /usr/local/lib/elophant-web/bin/elophant -Dconfig.file=/usr/local/lib/elophant-web/conf/application-${ELOPHANT_ENV}.conf
