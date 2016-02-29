@@ -8,12 +8,6 @@ HAPROXY_IMAGE=elophant-haproxy
 SERVER_NAME_PREFIX=elophant_web
 DOCKER_MACHINE_NAME=default
 
-if [ ${ELOPHANT_ENV} = 'local' ] || [ ${ELOPHANT_ENV} = 'dev' ]; then
-  HOST_IP=$(docker-machine ip ${DOCKER_MACHINE_NAME})
-else
-  HOST_IP=${DOCKER_HOST_IP}
-fi
-
 ### USAGE
 function print_usage {
   echo "Usage:"
@@ -330,7 +324,7 @@ if [ ${INCLUDE_SERVERS} = true ]; then
   echo "Starting new server containers..."
   if [ ${DRY_RUN} = false ]; then
     for (( i=1; i<=${NUM_SERVERS}; i++ )); do
-      docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVICE_PORT=9000 -e CONSUL_SERVICE_NAME=elophant-web -e HEALTH_CHECK_ADDRESS=http://elophant_web_${i}:9000/amiup --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE}:latest
+      docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e ELOPHANT_DATABASE=${ELOPHANT_DATABASE} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVICE_PORT=9000 -e CONSUL_SERVICE_NAME=elophant-web -e HEALTH_CHECK_ADDRESS=http://elophant_web_${i}:9000/amiup --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE}:latest
       if [ ${i} -eq 1 ]; then
         sleep 5 # Try to avoid case where 2 web servers simultaneously apply evolutions
       fi
