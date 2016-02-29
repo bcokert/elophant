@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+exec 2>&1
+source /etc/envvars
+
+echo -ne "$(/usr/bin/health-check.sh)" | nc -l -p 11911

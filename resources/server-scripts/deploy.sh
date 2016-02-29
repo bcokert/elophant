@@ -287,11 +287,11 @@ if [ ${INCLUDE_LOAD_BALANCERS} = true ]; then
   echo "Starting new load balancer containers..."
   if [ ${DRY_RUN} = false ]; then
     for (( i=1; i<=${NUM_LOAD_BALANCERS}; i++ )); do
-      docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=elophant_haproxy_${i} -e CONSUL_SERVICE_PORT=8${i} -e CONSUL_SERVICE_NAME=elophant-haproxy --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE}:latest
+      docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=elophant_haproxy_${i} -e CONSUL_SERVICE_PORT=8${i} -e CONSUL_SERVICE_NAME=elophant-haproxy -e HEALTH_CHECK_ADDRESS=http://elophant_haproxy_${i}:11911 --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE}:latest
     done
   else
     for (( i=1; i<=${NUM_LOAD_BALANCERS}; i++ )); do
-      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=elophant_haproxy_${i} -e CONSUL_SERVICE_PORT=8${i} -e CONSUL_SERVICE_NAME=elophant-haproxy --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE}:latest'"
+      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -p 8${i}:80 -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=elophant_haproxy_${i} -e CONSUL_SERVICE_PORT=8${i} -e CONSUL_SERVICE_NAME=elophant-haproxy -e HEALTH_CHECK_ADDRESS=http://elophant_haproxy_${i}:11911 --name elophant_haproxy_${i} ${REPOSITORY}/${HAPROXY_IMAGE}:latest'"
     done
   fi
 fi
@@ -330,14 +330,14 @@ if [ ${INCLUDE_SERVERS} = true ]; then
   echo "Starting new server containers..."
   if [ ${DRY_RUN} = false ]; then
     for (( i=1; i<=${NUM_SERVERS}; i++ )); do
-      docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVICE_PORT=9000 -e CONSUL_SERVICE_NAME=elophant-web --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE}:latest
+      docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVICE_PORT=9000 -e CONSUL_SERVICE_NAME=elophant-web -e HEALTH_CHECK_ADDRESS=http://elophant_web_${i}:9000/amiup --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE}:latest
       if [ ${i} -eq 1 ]; then
         sleep 5 # Try to avoid case where 2 web servers simultaneously apply evolutions
       fi
     done
   else
     for (( i=1; i<=${NUM_SERVERS}; i++ )); do
-      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVICE_PORT=9000 -e CONSUL_SERVICE_NAME=elophant-web --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE}:latest'"
+      echo "Dry Run: 'docker run -d --net=${ELOPHANT_NETWORK} -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} -e CONSUL_CLIENT_ADDRESS=elophant_consul_client:8500 -e CONSUL_SERVICE_ADDRESS=${SERVER_NAME_PREFIX}_${i} -e CONSUL_SERVICE_PORT=9000 -e CONSUL_SERVICE_NAME=elophant-web -e HEALTH_CHECK_ADDRESS=http://elophant_web_${i}:9000/amiup --name ${SERVER_NAME_PREFIX}_${i} ${REPOSITORY}/${WEB_IMAGE}:latest'"
     done
   fi
 fi

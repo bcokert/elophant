@@ -8,24 +8,20 @@ if ! sv check elophant-rsyslog | grep -q "ok: run"; then
   exit 1
 fi
 
-# check temporarily disabled
-#"check": {
-#    "id": "${CONSUL_SERVICE_ADDRESS}",
-#    "name": "Container Local Health Check",
-#    "docker_container_id": "$(cat /proc/self/cgroup | grep 'cpu:/' | sed 's/\([0-9]\):cpu:\/docker\///g')",
-#    "shell": "/bin/bash",
-#    "script": "/usr/bin/health-check.sh",
-#    "interval": "15s",
-#    "timeout": "5s"
-#  }
-
 # Register service with consul agent
 read -r -d '' CONSUL_SERVICE_CONFIG <<- EOM
 {
   "id": "${CONSUL_SERVICE_ADDRESS}",
   "name": "${CONSUL_SERVICE_NAME}",
   "address": "${CONSUL_SERVICE_ADDRESS}",
-  "port": ${CONSUL_SERVICE_PORT}
+  "port": ${CONSUL_SERVICE_PORT},
+  "check": {
+    "id": "${CONSUL_SERVICE_ADDRESS}",
+    "name": "Container Local Health Check",
+    "http": "${HEALTH_CHECK_ADDRESS}",
+    "interval": "15s",
+    "timeout": "10s"
+  }
 }
 EOM
 curl -X PUT -H "content-type:application/json" --data "${CONSUL_SERVICE_CONFIG}" ${CONSUL_CLIENT_ADDRESS}/v1/agent/service/register
