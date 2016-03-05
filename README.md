@@ -265,10 +265,6 @@ Response Body:
 ```
 
 ## Server Documentation
-When referring to environments, the following name scheme is used
-Local - the local dev machine
-Dev - the remote dev environment
-Prod - the remote production environment
 
 ### Developers
 
@@ -295,7 +291,6 @@ On OSX, your containers run inside a VM. You need to forward ports to the contai
 * Repeat for any other ports you want to open (you don't need to open 9000, since you'll be running the server via activator, not docker)
 
 #### Running a Local Server
-Locally you can run an elophant server, and by default it will connect to the dev database.
 ```bash
 > ./activator run        # Run in dev mode, with nice handling of exceptions
 > ./activator testProd   # Run in prod mode, which acts exactly like production, but uses the local config file
@@ -313,14 +308,12 @@ db.url: "jdbc:postgresql://localhost:5432/elophant"
 
 #### Setup an Environment
 The setup for Dev and Prod (and other) environments is the same, save for different environment variable values.
-When relevant use "local" for Local "dev" for Dev, and "prod" for Production
 
 ##### Setup Environment Variables
 For the local environment (devs only) see their relevant Environment variable section, which uses a script
 For all other environments, the following variables need to be set:
 * Set ELOPHANT_USER_PASSWORD - password for regular access
 * Set ELOPHANT_ADMIN_PASSWORD - password for admin access (only used to init database)
-* Set ELOPHANT_ENV - used to select the correct config file, found in application-$ENV.conf
 * Set ELOPHANT_SECRET - the play secret, should be generated via 'activator playGenerateSecret'
 
 ##### Install Docker
@@ -329,7 +322,7 @@ For all other environments, the following variables need to be set:
 
 ##### Configure ports
 * Ensure port 9000 of the docker host is forwarded externally (this is the default port for the server)
-* Ensure port 5432 of the docker host is forwarded externally (this is used by local to connect to the dev database, and by psql for database maintenance)
+* Ensure port 5432 of the docker host is forwarded externally (this is used by psql for database maintenance, and for cross environment database connections (eg your laptop to a different hosts database))
 * All other ports are automatically configured between docker containers within the host
 
 ##### Install deployment scripts
@@ -374,7 +367,7 @@ This will also tell you where to find the database volume and the logs volume.
 To run a copied container, look at the last line of the deploy script for the server in /usr/local/bin.
 Replace '-d' with '-ti --rm', and add '/bin/bash' to the end.
 ```
-> docker run -ti --rm --link elophant_db_1:database -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} -e ELOPHANT_ENV=${ELOPHANT_ENV} bcokert/elophant-web:latest /bin/bash
+> docker run -ti --rm --link elophant_db_1:database -e ELOPHANT_USER_PASSWORD=${ELOPHANT_USER_PASSWORD} -e ELOPHANT_SECRET=${ELOPHANT_SECRET} bcokert/elophant-web:latest /bin/bash
 ```
 
 #### Undo killing the database

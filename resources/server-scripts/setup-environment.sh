@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-if ! grep -q ELOPHANT_ENV ~/.bash_profile; then
-  read -p "What is the type of this environment (dev, staging, or production): " ELOPHANT_ENV
-  echo
-  echo "export ELOPHANT_ENV=${ELOPHANT_ENV}" >> ~/.bash_profile
-fi
-
 if ! grep -q ELOPHANT_DATABASE ~/.bash_profile; then
   read -p "What is the address (with port) of the database: " ELOPHANT_DATABASE
   echo

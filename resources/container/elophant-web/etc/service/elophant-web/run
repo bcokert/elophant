@@ -21,4 +21,4 @@ EOM
 curl -X PUT -H "content-type:application/json" --data "${CONSUL_SERVICE_CONFIG}" ${CONSUL_CLIENT_ADDRESS}/v1/agent/service/register
 
 rm -f /usr/local/lib/elophant-web/RUNNING_PID
-exec /usr/local/lib/elophant-web/bin/elophant -Dconfig.file=/usr/local/lib/elophant-web/conf/application-${ELOPHANT_ENV}.conf
+exec /usr/local/lib/elophant-web/bin/elophant -Dconfig.file=/usr/local/lib/elophant-web/conf/application.conf
