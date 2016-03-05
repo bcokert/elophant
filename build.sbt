@@ -1,6 +1,6 @@
 name := """elophant"""
 
-version := "3.2.0"
+version := "3.2.1"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
