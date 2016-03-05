@@ -20,7 +20,7 @@ fi
 
 echo "New Version: $MAJOR.$MINOR.$PATCH"
 
-sed "s/$VERSION/$MAJOR.$MINOR.$PATCH/" build.sbt > tmp
+sed "s/version := \"$VERSION\"/version := \"$MAJOR.$MINOR.$PATCH\"/" build.sbt > tmp
 mv tmp build.sbt
 
 git add build.sbt
