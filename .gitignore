@@ -3,3 +3,4 @@ target
 logs
 
 application*-log-*.gz
+release-tmp
