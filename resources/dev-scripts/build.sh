@@ -61,7 +61,8 @@ fi
 
 # Initialize Variables
 CONTAINER_DIR=${RESOURCE_DIR}/container/${IMAGE}
-OUTPUT_DIR=${ROOT_DIR}/release-tmp/${IMAGE}
+OUTPUT_ROOT=${ROOT_DIR}/release-tmp
+OUTPUT_DIR=${OUTPUT_ROOT}/${IMAGE}
 
 # Check that docker-machine is running
 echo "Checking that docker VM is available..."
@@ -119,7 +120,7 @@ docker images | grep ${IMAGE}
 # Cleanup the temp output dir
 echo "Cleaning up build artifacts..."
 if [ ${CLEAN} = true ]; then
-  rm -rf ${OUTPUT_DIR}
+  rm -rf ${OUTPUT_ROOT}
 fi
 
 # Deploy the image to registry
