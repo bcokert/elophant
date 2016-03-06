@@ -25,9 +25,9 @@ class ErrorHandler @Inject()(
   }
 
   override def onClientError(request: RequestHeader, statusCode: Int, message: String): Future[Result] = {
-    Logger.warn(s"Client Error '$statusCode' for request '$request'")
+    Logger.warn(s"Client Error '$statusCode' for request '$request'.")
     Future.successful(env.mode match {
-      case Mode.Prod => statusCode match {
+      case Mode.Prod | Mode.Test => statusCode match {
         case BAD_REQUEST => BadRequest(Json.toJson(GenericResponse(success = false, None, Some(Seq("Bad request.")))))
         case FORBIDDEN => Forbidden(Json.toJson(GenericResponse(success = false, None, Some(Seq("The requested resource is forbidden.")))))
         case NOT_FOUND => NotFound(Json.toJson(GenericResponse(success = false, None, Some(Seq("The requested resource does not exist.")))))

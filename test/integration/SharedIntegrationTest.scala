@@ -4,6 +4,7 @@ import dto.response.AccessControlFailureResponse
 import play.api.libs.json._
 import play.api.test.Helpers._
 import slick.driver.PostgresDriver.api._
+import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import slick.jdbc.JdbcBackend
 import types.{PermissionLevels, PermissionTypes}
@@ -709,6 +710,22 @@ class SharedIntegrationTest extends BaseIntegrationTest {
             "Rating for Player '2' and Game Type '9563' does not exist"
           )
         )
+      }
+    }
+  }
+
+
+
+
+  "A NotFound error" should "be returned if the requested resource is not found" in {
+    withDatabase { db =>
+      testRequestAndManuallyVerify(GET, "/thisIsntHere", defaultHeaders, NOT_FOUND) { result =>
+        result.value should equal(Json.obj(
+          "success" -> false,
+          "errorReasons" -> Json.arr(
+            "The requested resource does not exist."
+          )
+        ))
       }
     }
   }
