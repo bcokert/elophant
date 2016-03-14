@@ -7,6 +7,7 @@ COPY usr /usr
 RUN echo "@testing http://dl-4.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories \
  && apk --update add bash vim curl tzdata runit@testing \
  && chmod -R 755 /etc/service/ \
+ && chmod -R 755 /etc/cron.d/ \
  && chmod 755 /usr/sbin/runit_bootstrap \
  && chmod 755 /usr/sbin/runsvdir-start \
  && touch /etc/inittab \

@@ -30,4 +30,24 @@ if ! grep -q ELOPHANT_NETWORK ~/.bash_profile; then
   echo "export ELOPHANT_NETWORK=${NETWORK_NAME}" >> ~/.bash_profile
 fi
 
+if ! grep -q ELOPHANT_DB_BACKUP_FREQUENCY_DAYS ~/.bash_profile; then
+  read -p "What is the frequency (in days) that you want to backup the datbase to s3? (0 for never): " BACKUP_FREQUENCY
+  echo
+  echo "export ELOPHANT_DB_BACKUP_FREQUENCY_DAYS=${BACKUP_FREQUENCY}" >> ~/.bash_profile
+fi
+
+if ((ELOPHANT_DB_BACKUP_FREQUENCY_DAYS > 0)) || ((BACKUP_FREQUENCY > 0)) ; then
+  if ! grep -q ELOPHANT_AWS_SECRET_BACKUP_CREATE ~/.bash_profile; then
+    read -p "What is aws s3 secret for the create user: " AWS_SECRET_BACKUP_CREATE
+    echo
+    echo "export ELOPHANT_AWS_SECRET_BACKUP_CREATE=${AWS_SECRET_BACKUP_CREATE}" >> ~/.bash_profile
+  fi
+
+  if ! grep -q ELOPHANT_AWS_KEY_BACKUP_CREATE ~/.bash_profile; then
+    read -p "What is aws s3 key for the create user: " AWS_KEY_BACKUP_CREATE
+    echo
+    echo "export ELOPHANT_AWS_KEY_BACKUP_CREATE=${AWS_KEY_BACKUP_CREATE}" >> ~/.bash_profile
+  fi
+fi
+
 echo "please run 'source ~/.bash_profile'"

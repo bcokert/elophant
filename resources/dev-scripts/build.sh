@@ -114,7 +114,7 @@ esac
 # Build the Image
 echo "Building Docker Image..."
 LATEST_BUILD=latest
-docker build -t ${REPOSITORY}/${IMAGE}:latest ${OUTPUT_DIR}
+docker build --no-cache -t ${REPOSITORY}/${IMAGE}:latest ${OUTPUT_DIR}
 docker images | grep ${IMAGE}
 
 # Cleanup the temp output dir
