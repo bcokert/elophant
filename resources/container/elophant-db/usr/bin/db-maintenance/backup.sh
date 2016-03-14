@@ -2,7 +2,8 @@
 source /etc/envvars
 
 if [ ! -z "${ELOPHANT_AWS_KEY_BACKUP_CREATE}" ] && [ ! -z "${ELOPHANT_AWS_SECRET_BACKUP_CREATE}" ]; then
-  LAST_RUN="$(cat ./lastrun)"
+  SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  LAST_RUN="$(cat ${SCRIPT_DIR}/lastrun)"
   CURRENT_TIME="$(date +'%s')"
   DELTA=$((CURRENT_TIME - LAST_RUN))
   DAYS=$((DELTA / 86400))
@@ -18,7 +19,7 @@ if [ ! -z "${ELOPHANT_AWS_KEY_BACKUP_CREATE}" ] && [ ! -z "${ELOPHANT_AWS_SECRET
 
     export AWS_ACCESS_KEY_ID=""
     export AWS_SECRET_ACCESS_KEY=""
-    echo "$(date +'%s')" > ./lastrun
+    echo "$(date +'%s')" > "${SCRIPT_DIR}/lastrun"
   fi
 else
   if [ ! -z "${ELOPHANT_DB_BACKUP_FREQUENCY_DAYS}" ]; then
